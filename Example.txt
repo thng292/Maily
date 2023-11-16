@@ -1,0 +1,302 @@
+[thng292@fedora Downloads]$ java -jar test-mail-server-1.0.jar -s 2225 -p 3335 -m ./ -c -sr
+[09:32:28.842] [main] [INFO ] r.e.t.MailServer:174 - Starting SMTP server on port 2225...
+[09:32:28.896] [main] [INFO ] r.e.t.MailServer:211 - Starting POP3 server on port 3335...
+[09:32:34.572] [worker-0] [INFO ] r.e.t.POP3Handler:59 - Client connected: /127.0.0.1:51754
+[09:32:34.574] [worker-0] [DEBUG] r.e.t.POP3Handler:66 - >>: +OK Test Mail Server
+[09:32:34.621] [worker-0] [DEBUG] r.e.t.POP3Handler:111 - <<: CAPA
+[09:32:34.621] [worker-0] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+UIDL
+.
+[09:32:34.624] [worker-0] [DEBUG] r.e.t.POP3Handler:111 - <<: USER fuck@fuck.fuck
+[09:32:34.629] [worker-0] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+[09:32:36.776] [worker-0] [DEBUG] r.e.t.POP3Handler:111 - <<: PASS dflsajf
+[09:32:36.776] [worker-0] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+[09:32:36.796] [worker-0] [DEBUG] r.e.t.POP3Handler:111 - <<: STAT
+[09:32:36.799] [worker-0] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK 1 369
+[09:32:36.813] [worker-0] [DEBUG] r.e.t.POP3Handler:111 - <<: LIST
+[09:32:36.814] [worker-0] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+1 369
+.
+[09:32:36.818] [worker-0] [DEBUG] r.e.t.POP3Handler:111 - <<: UIDL
+[09:32:36.819] [worker-0] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+1 20231113092529576.msg
+.
+[09:32:36.820] [worker-0] [DEBUG] r.e.t.POP3Handler:111 - <<: RETR 1
+[09:32:36.822] [worker-0] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK 369
+Message-ID: <a38e38ab-bb3b-4f65-a77d-19ff5a1cd828@fuck.fuck>
+Date: Mon, 13 Nov 2023 09:25:29 +0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: anhvu@fuck.fuck
+From: nguyen quang thong <fuck@fuck.fuck>
+Subject: sdfsadf
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+sdfsdfdsdfsadf
+
+.
+[09:32:36.846] [worker-0] [DEBUG] r.e.t.POP3Handler:111 - <<: QUIT
+[09:32:36.847] [worker-0] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+[09:32:36.848] [worker-0] [INFO ] r.e.t.POP3Handler:76 - Client disconnected: /127.0.0.1:51754
+[09:34:34.516] [worker-1] [INFO ] r.e.t.SMTPHandler:57 - Client connected: /127.0.0.1:38812
+[09:34:34.517] [worker-1] [DEBUG] r.e.t.SMTPHandler:64 - >>: 220 Test Mail Server
+[09:34:34.532] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: EHLO [127.0.0.1]
+[09:34:34.533] [worker-1] [DEBUG] r.e.t.SMTPHandler:186 - >>: 250 OK
+[09:34:34.542] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: MAIL FROM:<fuck@fuck.fuck>
+[09:34:34.542] [worker-1] [DEBUG] r.e.t.SMTPHandler:186 - >>: 250 sender <fuck@fuck.fuck> OK
+[09:34:34.547] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: RCPT TO:<anhvu@fuck.fuck>
+[09:34:34.547] [worker-1] [DEBUG] r.e.t.SMTPHandler:186 - >>: 250 recipient <anhvu@fuck.fuck> OK
+[09:34:34.548] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: DATA
+[09:34:34.549] [worker-1] [DEBUG] r.e.t.SMTPHandler:186 - >>: 354 enter mail, end with line containing only "."
+[09:34:34.568] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Type: multipart/alternative;
+[09:34:34.581] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:  boundary="------------U7ml2W5kUqFY1e0WpyqMF9ar"
+[09:34:34.581] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Message-ID: <12f60bef-789e-48a9-8874-1fbe61f5a327@fuck.fuck>
+[09:34:34.581] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Date: Mon, 13 Nov 2023 09:34:34 +0700
+[09:34:34.581] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: MIME-Version: 1.0
+[09:34:34.581] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: User-Agent: Mozilla Thunderbird
+[09:34:34.582] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Language: en-US
+[09:34:34.582] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: To: anhvu@fuck.fuck
+[09:34:34.584] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: From: nguyen quang thong <fuck@fuck.fuck>
+[09:34:34.584] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Subject: test advance
+[09:34:34.585] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.585] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: This is a multi-part message in MIME format.
+[09:34:34.585] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------U7ml2W5kUqFY1e0WpyqMF9ar
+[09:34:34.585] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Type: text/plain; charset=UTF-8; format=flowed
+[09:34:34.585] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Transfer-Encoding: 7bit
+[09:34:34.585] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: *Bold
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: *
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: */Italic
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: /*
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:   */Heading 1/*
+[09:34:34.586] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Different font
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Red
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------U7ml2W5kUqFY1e0WpyqMF9ar
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Type: text/html; charset=UTF-8
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Transfer-Encoding: 7bit
+[09:34:34.587] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.588] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: <!DOCTYPE html>
+[09:34:34.588] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: <html>
+[09:34:34.588] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:   <head>
+[09:34:34.588] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.588] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+[09:34:34.588] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:   </head>
+[09:34:34.588] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:   <body>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <p><b>Bold<br>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:       </b></p>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <p><b><i>Italic<br>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:         </i></b></p>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <h1><b><i>Heading 1</i></b></h1>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <p><br>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     </p>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <p><font face="Courier New, Courier, monospace">Different font</font></p>
+[09:34:34.589] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <p><br>
+[09:34:34.590] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     </p>
+[09:34:34.590] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <p><font color="#ff0000">Red</font><br>
+[09:34:34.590] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:     </p>
+[09:34:34.590] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<:   </body>
+[09:34:34.590] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: </html>
+[09:34:34.590] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:34:34.590] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------U7ml2W5kUqFY1e0WpyqMF9ar--
+[09:34:34.590] [worker-1] [DEBUG] r.e.t.SMTPHandler:120 - <<: .
+[09:34:34.595] [worker-1] [INFO ] r.e.t.SMTPHandler:138 - Message saved to [/home/thng292/Downloads/./fuck@fuck.fuck/20231113093434590.msg]
+[09:34:34.595] [worker-1] [DEBUG] r.e.t.SMTPHandler:186 - >>: 250 1221 bytes accepted
+[09:35:34.596] [worker-1] [INFO ] r.e.t.SMTPHandler:103 - Closing client connection /127.0.0.1:38812 because Keep-Alive timeout has expired
+[09:35:34.597] [worker-1] [INFO ] r.e.t.SMTPHandler:74 - Client disconnected: /127.0.0.1:38812
+[09:35:34.598] [worker-1] [DEBUG] r.e.t.SMTPHandler:84 - Cleaning temporary files...
+[09:35:34.599] [worker-1] [DEBUG] r.e.t.SMTPHandler:87 - File '/tmp/mail8256875751489699157.msg' deleted
+[09:35:49.455] [worker-2] [INFO ] r.e.t.POP3Handler:59 - Client connected: /127.0.0.1:46772
+[09:35:49.455] [worker-2] [DEBUG] r.e.t.POP3Handler:66 - >>: +OK Test Mail Server
+[09:35:49.469] [worker-2] [DEBUG] r.e.t.POP3Handler:111 - <<: CAPA
+[09:35:49.470] [worker-2] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+UIDL
+.
+[09:35:49.475] [worker-2] [DEBUG] r.e.t.POP3Handler:111 - <<: USER fuck@fuck.fuck
+[09:35:49.476] [worker-2] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+[09:35:49.482] [worker-2] [DEBUG] r.e.t.POP3Handler:111 - <<: PASS dflsajf
+[09:35:49.482] [worker-2] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+[09:35:49.489] [worker-2] [DEBUG] r.e.t.POP3Handler:111 - <<: STAT
+[09:35:49.489] [worker-2] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK 2 1590
+[09:35:49.491] [worker-2] [DEBUG] r.e.t.POP3Handler:111 - <<: LIST
+[09:35:49.491] [worker-2] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+1 369
+2 1221
+.
+[09:35:49.492] [worker-2] [DEBUG] r.e.t.POP3Handler:111 - <<: UIDL
+[09:35:49.493] [worker-2] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+1 20231113092529576.msg
+2 20231113093434590.msg
+.
+[09:35:49.494] [worker-2] [DEBUG] r.e.t.POP3Handler:111 - <<: RETR 2
+[09:35:49.495] [worker-2] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK 1221
+Content-Type: multipart/alternative;
+ boundary="------------U7ml2W5kUqFY1e0WpyqMF9ar"
+Message-ID: <12f60bef-789e-48a9-8874-1fbe61f5a327@fuck.fuck>
+Date: Mon, 13 Nov 2023 09:34:34 +0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: anhvu@fuck.fuck
+From: nguyen quang thong <fuck@fuck.fuck>
+Subject: test advance
+
+This is a multi-part message in MIME format.
+--------------U7ml2W5kUqFY1e0WpyqMF9ar
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+*Bold
+*
+
+*/Italic
+/*
+
+
+  */Heading 1/*
+
+
+Different font
+
+
+Red
+
+--------------U7ml2W5kUqFY1e0WpyqMF9ar
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <p><b>Bold<br>
+      </b></p>
+    <p><b><i>Italic<br>
+        </i></b></p>
+    <h1><b><i>Heading 1</i></b></h1>
+    <p><br>
+    </p>
+    <p><font face="Courier New, Courier, monospace">Different font</font></p>
+    <p><br>
+    </p>
+    <p><font color="#ff0000">Red</font><br>
+    </p>
+  </body>
+</html>
+
+--------------U7ml2W5kUqFY1e0WpyqMF9ar--
+.
+[09:35:49.519] [worker-2] [DEBUG] r.e.t.POP3Handler:111 - <<: QUIT
+[09:35:49.519] [worker-2] [DEBUG] r.e.t.POP3Handler:317 - >>: +OK
+[09:35:49.520] [worker-2] [INFO ] r.e.t.POP3Handler:76 - Client disconnected: /127.0.0.1:46772
+[09:37:36.768] [worker-3] [INFO ] r.e.t.SMTPHandler:57 - Client connected: /127.0.0.1:47508
+[09:37:36.768] [worker-3] [DEBUG] r.e.t.SMTPHandler:64 - >>: 220 Test Mail Server
+[09:37:36.788] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: EHLO [127.0.0.1]
+[09:37:36.788] [worker-3] [DEBUG] r.e.t.SMTPHandler:186 - >>: 250 OK
+[09:37:36.793] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: MAIL FROM:<fuck@fuck.fuck>
+[09:37:36.793] [worker-3] [DEBUG] r.e.t.SMTPHandler:186 - >>: 250 sender <fuck@fuck.fuck> OK
+[09:37:36.795] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: RCPT TO:<anhvu@fuck.fuck>
+[09:37:36.796] [worker-3] [DEBUG] r.e.t.SMTPHandler:186 - >>: 250 recipient <anhvu@fuck.fuck> OK
+[09:37:36.817] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: DATA
+[09:37:36.818] [worker-3] [DEBUG] r.e.t.SMTPHandler:186 - >>: 354 enter mail, end with line containing only "."
+[09:37:36.819] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Type: multipart/mixed; boundary="------------OY0s2grN7BJcwiB0rZVsAyYk"
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Message-ID: <92b9237f-0bd7-4ca9-bafe-e08aa80bf60a@fuck.fuck>
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Date: Mon, 13 Nov 2023 09:37:36 +0700
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: MIME-Version: 1.0
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: User-Agent: Mozilla Thunderbird
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Language: en-US
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: To: anhvu@fuck.fuck
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: From: nguyen quang thong <fuck@fuck.fuck>
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Subject: test advance 2
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:37:36.820] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: This is a multi-part message in MIME format.
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------OY0s2grN7BJcwiB0rZVsAyYk
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Type: multipart/alternative;
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:  boundary="------------OqxZ4hNcBVLeNrWWtFby6sfv"
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------OqxZ4hNcBVLeNrWWtFby6sfv
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Type: text/plain; charset=UTF-8; format=flowed
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Transfer-Encoding: 7bit
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: */Bold and Italic and Red/
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: *
+[09:37:36.821] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------OqxZ4hNcBVLeNrWWtFby6sfv
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Type: text/html; charset=UTF-8
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Transfer-Encoding: 7bit
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: <!DOCTYPE html>
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: <html>
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:   <head>
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:   </head>
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:   <body>
+[09:37:36.822] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:     <b><i><font color="#ff0000">Bold and Italic and Red</font></i><font
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:         color="#ff0000"><br>
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:       </font></b>
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<:   </body>
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: </html>
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------OqxZ4hNcBVLeNrWWtFby6sfv--
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------OY0s2grN7BJcwiB0rZVsAyYk
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Type: image/png; name="sana.png"
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Disposition: attachment; filename="sana.png"
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Content-Transfer-Encoding: base64
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:37:36.823] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: iVBORw0KGgoAAAANSUhEUgAAAG0AAACYCAMAAADZeZfOAAAAAXNSR0IArs4c6QAAADNQTFRF
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: AAAA3dfN4cq9tJmRvZN1pWZU5d3W////upWHDxRX1ad5KC/a383X2huS7HYe7K8eVhgnPiqm
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: nQAAABF0Uk5TAP////////////////////8QFUChAAAGX0lEQVR4nN3Z7XarKhAGYCLiUmNS
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 7/9qN8zwMcAMYqL5saena7dJ5DkvImBV6oN6hfrk4NNW+vF+DEU0b+deUfyFBj35gq9faGGU
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: /AhD8VeQejyG4TVg3U5BBe1O7xFrIHWnpaGG4WbPW968mUMk78kU8gcYgHdwOUYHyQ2cjN3B
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: NbDruSYWud9gF3NUK3ovqxswzWH6Di22q90Xmb+0WxVeg19kr9FSKGO/aET3w8uF+xobBsCy
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 8+W1vCsv2fRVISxm3H/0jVu1kdGsNVymaV1oGach2evbYTmoMAZT42a02mjoQNF+s/4lh+3l
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: PYlaxumL7g1yzRDNejdolAvaOOyuTJhbUNu2bfoKe73o8EDOabsvjK6B27YvuZfTdEyF/1pt
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: X1fPaRhDo+W27UvuRTQ/5N2VnbB1h+GqR8t5bftWc5xxjdvzhePj8dgTZzVzpWZbxMZHX1Z7
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: TdO07zh/grY66vl8fsxFTe++85K2l5paAfuc25IWzlTQ/v6s9vf38Nio7cfX5/MLzvZM4HbX
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: dy5OCPeHhZobJO4Arz3lJtcW5grDwbhImuceI2qI9Wgit+Xcvv8RLVRYbzq1GG7FkjRMU2Jj
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: WNxU4GbdwjDcSovX+AJtioDT2svOWhce6a9W3eJgnaV9Nx9t9XjODWWYGlqajaZ01v48tDls
+[09:37:36.824] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: fxwzmZxxxFSmmHHzQ0Sd04Cq+ah5TCXOztCeMrrS2lzE3rYYLmkqj+dYVWcDTeKGiC32i+FU
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: wgrPmEnVWFOL3fh+k3AqairXImh7c1om12zVtswN2TkD7U05hVp1nJmsNeEOYszPekOL/QiI
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 095Jw4+wmrOMg7A6udSReTadLnIOU8tiCMZpDDcImhV4zUAtrjY6Q3eFS5cadqTXdKFFLlnL
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: Mh1oNUcu7Hc6bdA+0fDbYxNIoE2ixoej00i4BPyIz7QYzRK5ZjhNCJdNWm9/xrDnGA0wx6Ho
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: OMNmE8KVmk7TFL0E/Acmj80zWl5zP7BaydEZOceIFriAhX702sRqR+He7xLLdizY/GTbwXj4
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: q0Gs2vyL4Uotpc4+OYWa/XePVnC1lt7gosV4hO7XEqdBo0sOF232VWgl1tCA06CFJac6ayqz
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: IidFixrPuVhpgasxGGZ1TWc1XB2159Ir9fGnMEmLqz8MEX7ic7UBsCz2zSXHTmnV5obHRpj5
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: LQXf8QJ3FzzTEYOo1RtTGYNoy0ixWmthqtwIq1rzGDDE8Ri/BAjR8p23cl1bYkErpQkXuX4s
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: aHRH4A5P97PudoALNU2Px2MtsWE4iUG48McI/0cXrhxWaEMbYzU1ptu3A4xqw3CE8RpJJWKT
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: vzcaR9jmDsMpTFMn47IRCJXu9EBzR3dYQrRtK/pR+eGnNWB6TBj+DS/nBEvqSGq538NY18Dp
+[09:37:36.825] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: oEHTmmgi09SSh78lzJeXMuyIamgqXgMPPGGKYqnT/AtLB9XWsB6g2R+WsaI8BufyGi3Uglo+
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 9KLVyfVqMBSrR2GR6uQ6NcCa1knuADsI1sn1hHNW9fRyqrAO7lgDq8TiJHbSO9AWPtj0IdcO
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: JwX7VGuGW6rrOVo8d4S1uDZWa8cW4fjXJavmujCJY+bFcv3+wBI4XWnMduETjDt34lBkuTMW
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: w5VXmIAhd9KquMoyWWXaeavwKizeJSTxM4ThKqz4G+8FlmLHfI0BdwHmORRmgpV3lNdgAKLV
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: wi6z/ADJMXUSO1oxS0xnWPFYpUvqAwEjV0D+VOVA03V1RFMEg+rpygo49ASsfiAmUdzLTW1O
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: UwnpkZIbyzaFZhtaES07ERU3pvYaERrh8mhZW9rUXNdgEN/0mCIYAWWOyxPfEv9fmGjkeMNy
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: EpNxJ6LFlkztMc1XnBAu05j3YaU5z7U1PprAfaW1ooUHYuYDrt2RLNbPqePZ+TBa1HJParRb
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: EzDC0WVB/HSLO6d1cY3btVOaW+S+4no0Gu4kJ2rysbmWewL6jaZyLXGrkTJeqEUPtbjmHWqq
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: S1OlpjiNcNKgnO02slujOy9Gi5w8d7lnQYdaHc5xa/nku5y/mIZmfLrUpeVcpXVsY702nw6n
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: ak0dauqMlnFrGJuCJjQFmhstSjZZjXkoeWS5Qm5uBBQ05hnoIdZc4GROBa59JM8dfORK7qNr
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: LnKnNeQ61gKOO68d96ak3VPFQvcr7cfcf6z9BPv1qFT/s6b+Z03931r/Z/8B86t6xn1ZJ4IA
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: AAAASUVORK5CYII=
+[09:37:36.826] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: 
+[09:37:36.827] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: --------------OY0s2grN7BJcwiB0rZVsAyYk--
+[09:37:36.827] [worker-3] [DEBUG] r.e.t.SMTPHandler:120 - <<: .
+[09:37:36.827] [worker-3] [INFO ] r.e.t.SMTPHandler:138 - Message saved to [/home/thng292/Downloads/./fuck@fuck.fuck/20231113093736827.msg]
+[09:37:36.827] [worker-3] [DEBUG] r.e.t.SMTPHandler:186 - >>: 250 3796 bytes accepted
+[09:38:36.828] [worker-3] [INFO ] r.e.t.SMTPHandler:103 - Closing client connection /127.0.0.1:47508 because Keep-Alive timeout has expired
+[09:38:36.830] [worker-3] [INFO ] r.e.t.SMTPHandler:74 - Client disconnected: /127.0.0.1:47508
+[09:38:36.830] [worker-3] [DEBUG] r.e.t.SMTPHandler:84 - Cleaning temporary files...
+[09:38:36.831] [worker-3] [DEBUG] r.e.t.SMTPHandler:87 - File '/tmp/mail12730397659912658342.msg' deleted
+  
+
