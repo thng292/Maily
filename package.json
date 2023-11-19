@@ -25,7 +25,8 @@
     "@lexical/react": "^0.12.2",
     "@mui/icons-material": "^5.14.18",
     "@mui/material": "^5.14.18",
-    "lexical": "^0.12.2"
+    "lexical": "^0.12.2",
+    "react-redux": "^8.1.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.37.1",
