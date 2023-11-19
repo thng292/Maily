@@ -6,6 +6,7 @@ function App() {
   const [mailBox, dispatchMailBox] = useContext(MailBoxContext);
   return (
     <div>
+        <p>{JSON.stringify(mailBox)}</p>
       {JSON.stringify(config)}
       <input
         type="text"
