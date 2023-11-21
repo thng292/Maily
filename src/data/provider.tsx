@@ -1,23 +1,31 @@
-import { useMailBoxReducer } from "./email";
-import { useConfig, DefaultConfig } from "./config";
-import { createContext, ReactNode } from "react";
+import { useMailBoxReducer } from "./email"
+import { useConfig, DefaultConfig } from "./config"
+import { createContext, ReactNode } from "react"
 
 export const ConfigContext = createContext<ReturnType<typeof useConfig>>([
-  DefaultConfig,
-  (_) => {},
-]);
+    DefaultConfig,
+    (_) => {},
+])
 export const MailBoxContext = createContext<
-  ReturnType<typeof useMailBoxReducer>
->([[], (_) => {}]);
+    ReturnType<typeof useMailBoxReducer>
+>([
+    {
+        mailBox: {},
+        loading: false,
+        success: true,
+        error: "",
+    },
+    (_) => {},
+])
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const config = useConfig();
-  const mailBox = useMailBoxReducer(config[0]);
-  return (
-    <ConfigContext.Provider value={config}>
-      <MailBoxContext.Provider value={mailBox}>
-        {children}
-      </MailBoxContext.Provider>
-    </ConfigContext.Provider>
-  );
+    const config = useConfig()
+    const mailBox = useMailBoxReducer(config[0])
+    return (
+        <ConfigContext.Provider value={config}>
+            <MailBoxContext.Provider value={mailBox}>
+                {children}
+            </MailBoxContext.Provider>
+        </ConfigContext.Provider>
+    )
 }

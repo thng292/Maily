@@ -1,23 +1,17 @@
 import { POP3Wrapper, SMTPWrapper } from "@/socket"
-import {
-    useReducer,
-    useEffect,
-    Dispatch,
-    useMemo,
-    useState,
-    useCallback,
-} from "react"
+import { useEffect, Dispatch, useState, useCallback } from "react"
 import { Config, Filter } from "../config"
 
 type Email = {
+    id: number
     uidl: string
-    id: string
-    replyTo: string
-    time: Date
-    to: string
-    from: string
+    replyTo: string | null
+    sentTime: Date
+    sender: string
+    receiver: string
     subject: string
     content: HTMLElement
+    isSent: boolean
 }
 
 type FilteredMailBox = { [key: string]: Email[] }
@@ -49,20 +43,24 @@ type ActionType = (
     | {
           action: "Refesh"
       }
-) & {
-    successCB: () => void
-    errorCB: (e: string) => void
-}
+) & { onError: (err: string) => void }
 
 function useMailBoxReducer(config: Config) {
-    // const [mailBox, mailBoxDispatch] = useReducer(reducer, [])
-    const [mailBox, updateMailBox] = useState<Email[]>([])
+    const [mailBoxState, setMailBoxState] = useState<MailBoxState>({
+        mailBox: {},
+        loading: true,
+        success: false,
+        error: "",
+    })
 
     const mailBoxDispatch = useCallback(
         (action: ActionType) => {
             switch (action.action) {
                 case "Refesh":
-                    updateMailBox(prev => [...prev, 10])
+                    break
+                case "Send":
+                    break
+                case "Delete":
                     break
                 default:
                     break
@@ -72,39 +70,43 @@ function useMailBoxReducer(config: Config) {
     )
 
     useEffect(() => {
-        const tmp = setInterval(() => {mailBoxDispatch()}, config.pullInterval * 1000)
+        const tmp = setInterval(() => {
+            mailBoxDispatch({ action: "Refesh" })
+        }, config.pullInterval * 1000)
     }, [config])
 
-    const filteredMailBox = useMemo(() => {
-        console.log(mailBox)
-        let res: FilteredMailBox = { Inbox: [] }
-        for (let filter of config.filters) {
-            res[filter.name] = []
-        }
-        for (let i = 0; i < mailBox.length; i++) {
-            for (let filter of config.filters) {
-                if (match(mailBox[i], filter)) {
-                    res[filter.name].push(mailBox[i])
-                } else {
-                    res["Inbox"].push(mailBox[i])
-                }
-            }
-        }
-        res["Inbox"].push(...mailBox)
-        // Add Sent
-        res["Sent"].push(...[])
-        return res
-    }, [config, mailBox])
+    // useEffect(() => {
+    //     console.log(mailBox)
+    //     let res: FilteredMailBox = { Inbox: [] }
+    //     for (let filter of config.filters) {
+    //         res[filter.name] = []
+    //     }
+    //     for (let i = 0; i < mailBox.length; i++) {
+    //         for (let filter of config.filters) {
+    //             if (match(mailBox[i], filter)) {
+    //                 res[filter.name].push(mailBox[i])
+    //             } else {
+    //                 res["Inbox"].push(mailBox[i])
+    //             }
+    //         }
+    //     }
+    //     res["Inbox"].push(...mailBox)
+    //     // Add Sent
+    //     res["Sent"].push(...[])
+    //     setMailBoxState((prev) => {
+    //         return { ...prev, mailBox: res }
+    //     })
+    // }, [mailBox, config])
 
-    return [filteredMailBox, mailBoxDispatch] as [
-        FilteredMailBox,
+    return [mailBoxState, mailBoxDispatch] as [
+        MailBoxState,
         Dispatch<ActionType>,
     ]
 }
 
 function match(mail: Email, filter: Filter): boolean {
     for (let str of filter.rule.mail) {
-        if (mail.from.includes(str)) {
+        if (mail.sender.includes(str)) {
             return true
         }
     }
