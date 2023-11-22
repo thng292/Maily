@@ -1,20 +1,7 @@
-import { POP3Wrapper, SMTPWrapper } from "@/socket"
-import { useEffect, Dispatch, useState, useCallback } from "react"
+import { Dispatch, useState, useCallback } from "react"
 import { Config, Filter } from "../config"
-
-type Email = {
-    id: number
-    uidl: string
-    replyTo: string | null
-    sentTime: Date
-    sender: string
-    receiver: string
-    subject: string
-    content: HTMLElement
-    isSent: boolean
-}
-
-type FilteredMailBox = { [key: string]: Email[] }
+import { type Email, type FilteredMailBox } from "./types"
+import { MailBuilder } from "./MailBuilder"
 
 type MailBoxState = {
     mailBox: FilteredMailBox
@@ -34,7 +21,7 @@ type ActionKind = (typeof EActionKind)[keyof typeof EActionKind]
 type ActionType = (
     | {
           action: "Send"
-          payload: Email
+          payload: MailBuilder
       }
     | {
           action: "Delete"
@@ -69,11 +56,12 @@ function useMailBoxReducer(config: Config) {
         [config],
     )
 
-    useEffect(() => {
-        const tmp = setInterval(() => {
-            mailBoxDispatch({ action: "Refesh" })
-        }, config.pullInterval * 1000)
-    }, [config])
+    // useEffect(() => {
+    //     const tmp = setInterval(() => {
+    //         mailBoxDispatch({ action: "Refesh", onError: () => {} })
+    //     }, config.pullInterval * 1000)
+    //     return () => clearInterval(tmp)
+    // }, [config])
 
     // useEffect(() => {
     //     console.log(mailBox)
@@ -123,5 +111,5 @@ function match(mail: Email, filter: Filter): boolean {
     return false
 }
 
-export { useMailBoxReducer }
-export type { Email, ActionType, ActionKind }
+export { useMailBoxReducer, MailBuilder }
+export type { ActionType, ActionKind, Email, FilteredMailBox}

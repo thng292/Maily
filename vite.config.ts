@@ -47,10 +47,7 @@ export default defineConfig(({ command }) => {
                                         "dependencies" in pkg
                                             ? pkg.dependencies
                                             : {},
-                                    ),
-                                    "aws-sdk",
-                                    "nock",
-                                    "mock-aws-s3",
+                                    )
                                 ],
                             },
                         },
@@ -74,10 +71,7 @@ export default defineConfig(({ command }) => {
                                         "dependencies" in pkg
                                             ? pkg.dependencies
                                             : {},
-                                    ),
-                                    "aws-sdk",
-                                    "nock",
-                                    "mock-aws-s3",
+                                    )
                                 ],
                             },
                         },
