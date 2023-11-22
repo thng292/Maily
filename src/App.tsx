@@ -1,5 +1,9 @@
 import { ConfigContext, MailBoxContext } from "@/data/provider"
 import { useContext, useEffect } from "react"
+import { setupDB, SaveDB, TestBD } from "@/data/email/db"
+
+setupDB()
+TestBD()
 
 function App() {
     const [config, setConfig] = useContext(ConfigContext)

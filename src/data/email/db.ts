@@ -1,4 +1,5 @@
 import fs from "node:fs"
+import { type RawEmail } from "./types"
 
 const dbPath = "email.sqlite"
 fs.writeFileSync(dbPath, "", { flag: "a+" })
@@ -14,19 +15,28 @@ const getQueryID = (() => {
     }
 })()
 
-export type RawEmail = {
-    uidl: string
-    content: string
-}
-
 export const dbWorker = new Worker(
     new URL("./worker.sql-wasm.js", import.meta.url),
 )
+
+const saveDBId = 999
+export function SaveDB() {
+    dbWorker.postMessage({
+        id: saveDBId,
+        action: "export",
+    })
+}
+
+window.addEventListener("beforeunload", SaveDB)
 
 dbWorker.onmessage = () => {
     console.log("Database opened")
     dbWorker.onmessage = (event) => {
         console.log(event.data) // The result of the query
+        if (event.data.id == saveDBId) {
+            fs.writeFile(dbPath, event.data.buffer, console.error)
+            return
+        }
         if (!event.data.error) {
             if (successCb[event.data.id]) {
                 successCb[event.data.id](event.data.results[0].values)
@@ -35,6 +45,7 @@ dbWorker.onmessage = () => {
             if (errorCb[event.data.id]) {
                 errorCb[event.data.id](event.data.error)
             }
+            SaveDB()
         }
     }
 }
@@ -55,17 +66,17 @@ export function setupDB() {
         id: getQueryID(),
         action: "exec",
         sql: `
-        CREATE TABLE IF NOT EXISTS Inbox (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            uidl TEXT UNIQUE NOT NULL,
-            content TEXT not NULL
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS uidl_index ON Inbox(uidl);
+            CREATE TABLE IF NOT EXISTS Inbox (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                uidl TEXT UNIQUE NOT NULL,
+                content TEXT not NULL
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS uidl_index ON Inbox(uidl);
     
-        CREATE TABLE IF NOT EXISTS Sent (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-              content TEXT not NULL
-        );`,
+            CREATE TABLE IF NOT EXISTS Sent (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                content TEXT not NULL
+            );`,
     })
 }
 
@@ -74,14 +85,14 @@ export function TestBD() {
         id: getQueryID(),
         action: "exec",
         sql: `
-        INSERT INTO Inbox (uidl, content) VALUES ('SUSSY BAKA', 'TEST')
+            INSERT INTO Inbox (uidl, content) VALUES ('SUSSY BAKA', 'TEST')
         `,
     })
     dbWorker.postMessage({
         id: getQueryID(),
         action: "exec",
         sql: `
-        SELECT * FROM Inbox
+            SELECT * FROM Inbox
         `,
     })
 }
@@ -169,7 +180,7 @@ export function getEmails(
             $offset: offset,
         },
     })
-    successCb[id] = onSuccess
+    successCb[id] = onSuccess as (rawEmail?: RawEmail[]) => void
     errorCb[id] = onError
 }
 
@@ -177,5 +188,18 @@ export function getSentEmails(
     limit: number,
     offset: number,
     onSuccess: (mails: RawEmail[]) => void,
-    onError: (e: Error) => void,
-) {}
+    onError: (e: string) => void,
+) {
+    const id = getQueryID()
+    dbWorker.postMessage({
+        id: id,
+        action: "exec",
+        sql: `SELECT uidl, content FROM Sent LIMIT $limit OFFSET $offset`,
+        params: {
+            $limit: limit,
+            $offset: offset,
+        },
+    })
+    successCb[id] = onSuccess as (rawEmail?: RawEmail[]) => void
+    errorCb[id] = onError
+}

@@ -118,5 +118,3 @@ ipcMain.handle("open-win", (_, arg) => {
         childWindow.loadFile(indexHtml, { hash: arg })
     }
 })
-
-export default win
