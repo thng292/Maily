@@ -15,14 +15,16 @@ class POP3Wrapper {
     socket: Socket
     
     constructor(){     
-        this.socket= new Socket
+        this.socket= new Socket()
     }
 
-    //Neu goi th connect nay ma tra ve false thi goi lai, khong can QUIT
+
+    
     connect(server: string, port: number):boolean{ 
         this.socket.connect(port, server, ()=>{
             console.log(`connecting`)
-        })
+        })       
+        var data : any
         this.socket.on('data',(data)=>{
             if(data.toString().startsWith('+OK')){
                 return true
@@ -34,11 +36,12 @@ class POP3Wrapper {
             }
             
         })
-        this.socket.on('error',()=>{
+        this.socket.on('error',(data)=>{
             console.error(`POP3 connect error \r\n`)
             this.socket.end()
             return false;
         })
+        while(!data){}
         return false
     }
 
