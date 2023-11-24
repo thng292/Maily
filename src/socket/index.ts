@@ -85,8 +85,8 @@ class POP3Wrapper {
 
     STAT(): Promise<STATResult[]> {
         return new Promise((onRes, onErr) => {
-            let sub: string[]
-            let re: STATResult[]
+            let sub: string[] = []
+            let re: STATResult[] = []
             this.socket.write("STAT\r\n")
             this.socket.once("data", (data) => {
                 if (data.toString().startsWith("+OK")) {
@@ -120,8 +120,8 @@ class POP3Wrapper {
 
     UIDL(msgNumber?: number): Promise<UIDLResult[]> {
         return new Promise((onRes, onErr) => {
-            let sub: string[]
-            let re: UIDLResult[]
+            let sub: string[] = []
+            let re: UIDLResult[] = []
             if (msgNumber == undefined) {
                 this.socket.write("UIDL\r\n")
                 this.socket.once("data", (data) => {
@@ -187,18 +187,11 @@ class POP3Wrapper {
 
     RETR(msgNumber: number): Promise<string> {
         return new Promise((onRes, onErr) => {
-            let sub: string[]
-            let re: string
             this.socket.write(`RETR ${msgNumber}\r\n`)
             this.socket.once("data", (data) => {
-                if (data.toString().startsWith("+OK")) {
-                    sub = data
-                        .toString()
-                        .replace("\r\n", "---")
-                        .replace("\r\n.\r\n", "\r\n")
-                        .split("---")
-                    re = sub[1]
-                    onRes(re)
+                const tmp = data.toString()
+                if (tmp.startsWith("+OK")) {
+                    onRes(tmp.slice(tmp.indexOf("\r\n")))
                 }
                 if (data.toString().startsWith("-ERR")) {
                     onErr(
@@ -237,13 +230,22 @@ class POP3Wrapper {
         })
     }
 
-    QUIT() {
-        this.socket.write("QUIT\r\n")
-        this.socket.on("data", (data) => {
-            if (data.toString().startsWith("-ERR")) {
-                console.error(`QUIT reply ` + data.toString())
-            }
+    QUIT(): Promise<void> {
+        return new Promise((onRes, onErr) => {
+            this.socket.write("QUIT\r\n")
+            this.socket.on("data", (data) => {
+                const tmp = data.toString()
+                if (tmp.startsWith("-ERR")) {
+                    console.error(`QUIT reply ` + data.toString())
+                    onErr(tmp.slice(5))
+                } else {
+                    onRes()
+                }
+            })
         })
+    }
+
+    destroy() {
         this.socket.end()
     }
 }
@@ -261,67 +263,94 @@ class SMTPWrapper {
             socket = new Socket()
 
             //Connect
-            socket.connect(port, server, () => {})
-
-            socket.on("data", (data) => {
-                if (!data.toString().startsWith("220")) {
-                    onErr(data.toString().replace("\r\n", ""))
-                }
-            })
-
-            //HELO
-            socket.write(`HELO ${from}\r\n`)
-            socket.on("data", (data) => {
-                if (!data.toString().startsWith("250")) {
-                    onErr(data.toString().replace("\r\n", ""))
-                }
-            })
-
-            //MAIL
-            socket.write(`MAIL FROM:<${from}>\r\n`)
-            socket.on("data", (data) => {
-                if (!data.toString().startsWith("250")) {
-                    onErr(data.toString().replace("\r\n", ""))
-                }
-            })
-
-            //RCPT
-            for (let v of to) {
-                socket.write(`RCPT TO:<${v}>\r\n`)
-                socket.on("data", (data) => {
-                    if (
-                        !(
-                            data.toString().startsWith("250") ||
-                            data.toString().startsWith("251")
-                        )
-                    ) {
-                        onErr(data.toString().replace("\r\n", ""))
+            const Connect = new Promise<void>((res, rej) => {
+                socket.connect(port, server, () => {})
+                socket.once("data", (data) => {
+                    const tmp = data.toString()
+                    if (!tmp.startsWith("220")) {
+                        onErr(tmp.replace("\r\n", ""))
+                    } else {
+                        res()
                     }
                 })
-            }
-
-            //DATA
-            socket.write(`DATA\r\n`)
-            socket.on("data", (data) => {
-                if (!data.toString().startsWith("354")) {
-                    onErr(data.toString().replace("\r\n", ""))
-                }
             })
 
-            //WRITE CONTENT
-            socket.write(`${content}\r\n.\r\n`)
-            socket.on("data", (data) => {
-                if (!data.toString().startsWith("250")) {
-                    onErr(data.toString().replace("\r\n", ""))
-                }
+            const HELO = Connect.then(() => {
+                return new Promise<void>((res, rej) => {
+                    socket.write(`HELO ${server}\r\n`)
+                    socket.once("data", (data) => {
+                        if (!data.toString().startsWith("250")) {
+                            onErr(data.toString().replace("\r\n", ""))
+                        } else {
+                            res()
+                        }
+                    })
+                })
             })
 
-            //ERROR
-            socket.once("error", (data) => {
-                onErr(data.name)
+            const MAIL = HELO.then(() => {
+                return new Promise<void>((res, rej) => {
+                    socket.write(`MAIL FROM:<${from}>\r\n`)
+                    socket.once("data", (data) => {
+                        if (!data.toString().startsWith("250")) {
+                            onErr(data.toString().replace("\r\n", ""))
+                        } else {
+                            res()
+                        }
+                    })
+                })
             })
 
-            onRes()
+            const RCPT = MAIL.then(() => {
+                return new Promise<void>(async (res, rej) => {
+                    for (let v of to) {
+                        await new Promise<void>((res1, rej1) => {
+                            socket.write(`RCPT TO:<${v}>\r\n`)
+                            socket.once("data", (data) => {
+                                if (
+                                    !(
+                                        data.toString().startsWith("250") ||
+                                        data.toString().startsWith("251")
+                                    )
+                                ) {
+                                    onErr(data.toString().replace("\r\n", ""))
+                                } else {
+                                    res1()
+                                }
+                            })
+                        })
+                    }
+                    res()
+                })
+            })
+
+            const DATA = RCPT.then(() => {
+                return new Promise<void>((res, rej) => {
+                    socket.write(`DATA\r\n`)
+                    socket.once("data", (data) => {
+                        if (!data.toString().startsWith("354")) {
+                            onErr(data.toString().replace("\r\n", ""))
+                        } else {
+                            res()
+                        }
+                    })
+                })
+            })
+
+            const WRITE_CONTENT = DATA.then(() => {
+                return new Promise<void>((res, rej) => {
+                    socket.write(`${content}\r\n.\r\n`)
+                    socket.once("data", (data) => {
+                        if (!data.toString().startsWith("250")) {
+                            onErr(data.toString().replace("\r\n", ""))
+                        } else {
+                            res()
+                        }
+                    })
+                })
+            })
+
+            WRITE_CONTENT.then(onRes)
         })
     }
 }
