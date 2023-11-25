@@ -1,7 +1,7 @@
 import { Dispatch, useState, useCallback } from "react"
 import { Config, Filter } from "../config"
 import { type Email, type FilteredMailBox } from "./types"
-import { MailBuilder } from "./MailBuilder"
+import { MailBuilder, type Attachment } from "./MailBuilder"
 
 type MailBoxState = {
     mailBox: FilteredMailBox
@@ -112,4 +112,4 @@ function match(mail: Email, filter: Filter): boolean {
 }
 
 export { useMailBoxReducer, MailBuilder }
-export type { ActionType, ActionKind, Email, FilteredMailBox}
+export type { ActionType, ActionKind, Email, FilteredMailBox, Attachment}
