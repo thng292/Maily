@@ -131,7 +131,6 @@ function useMailBoxReducer(config: Config) {
                         try {
                             let newMails: RawEmail[] = []
                             const uids = await POP3.UIDL()
-                            console.log("UIDS", uids)
                             for (let uid of uids) {
                                 if (!(await findUIDL(uid.uid))) {
                                     const mail = {

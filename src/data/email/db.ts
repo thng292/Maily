@@ -35,7 +35,7 @@ window.addEventListener("beforeunload", SaveDB)
 dbWorker.onmessage = () => {
     console.log("Database opened")
     dbWorker.onmessage = (event) => {
-        console.log(event.data)
+        // console.log(event.data)
         if (event.data.id == saveDBId) {
             fs.writeFile(dbPath, event.data.buffer, (e) => {
                 if (e) console.error(e)
@@ -119,12 +119,12 @@ export function addRawEmail(rawEmail: RawEmail, date?: Date): Promise<void> {
             },
         })
         successCb[id] = () => {
-            console.log(id, addRawEmail.name)
+            // console.log(id, addRawEmail.name)
             onSuccess()
         }
         // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, addRawEmail.name, e)
+            // console.log(id, addRawEmail.name, e)
             onError(e)
         }
     })
@@ -142,12 +142,12 @@ export function sendEmail(content: string): Promise<void> {
             },
         })
         successCb[id] = () => {
-            console.log(id, sendEmail.name)
+            // console.log(id, sendEmail.name)
             onSuccess()
         }
         // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, sendEmail.name, e)
+            // console.log(id, sendEmail.name, e)
             onError(e)
         }
     })
@@ -162,11 +162,11 @@ export function deleteEmail(emailIDs: number[]): Promise<void> {
             sql: `DELETE FROM TABLE Inbox WHERE id IN (${emailIDs.join(",")})`,
         })
         successCb[id] = () => {
-            console.log(id, sendEmail.name)
+            // console.log(id, sendEmail.name)
             onSuccess()
         } // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, deleteEmail.name, e)
+            // console.log(id, deleteEmail.name, e)
             onError(e)
         }
     })
@@ -181,11 +181,11 @@ export function deleteSentEmail(emailIDs: number[]): Promise<void> {
             sql: `DELETE FROM TABLE Sent WHERE id IN (${emailIDs.join(",")})`,
         })
         successCb[id] = () => {
-            console.log(id, sendEmail.name)
+            // console.log(id, sendEmail.name)
             onSuccess()
         } // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, deleteSentEmail.name, e)
+            // console.log(id, deleteSentEmail.name, e)
             onError(e)
         }
     })
@@ -204,7 +204,7 @@ export function getEmails(limit: number, offset: number): Promise<RawEmail[]> {
             },
         })
         successCb[id] = (data?: [number, string, string, number][]) => {
-            console.log(id, getEmails.name, data)
+            // console.log(id, getEmails.name, data)
             onSuccess(
                 data!.map((val) => ({
                     id: val[0],
@@ -216,7 +216,7 @@ export function getEmails(limit: number, offset: number): Promise<RawEmail[]> {
         }
         // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, getEmails.name, e)
+            // console.log(id, getEmails.name, e)
             onError(e)
         }
     })
@@ -238,7 +238,7 @@ export function getSentEmails(
             },
         })
         successCb[id] = ((data?: [number, string, number][]) => {
-            console.log(id, getSentEmails.name, data)
+            // console.log(id, getSentEmails.name, data)
             onSuccess(
                 data!.map((val) => ({
                     id: val[0],
@@ -251,7 +251,7 @@ export function getSentEmails(
 
         // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, getSentEmails.name, e)
+            // console.log(id, getSentEmails.name, e)
             onError(e)
         }
     })
@@ -284,12 +284,12 @@ export function countMail(): Promise<number> {
             sql: `SELECT COUNT(*) FROM Inbox`,
         })
         successCb[id] = ((res: [[number]]) => {
-            console.log(id, countMail.name, res)
+            // console.log(id, countMail.name, res)
             onSuccess(res[0][0])
         }) as unknown as SuccessCB_T
         // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, countMail.name, e)
+            // console.log(id, countMail.name, e)
             onError(e)
         }
     })
@@ -307,12 +307,12 @@ export function findUIDL(uidl: string): Promise<boolean> {
             },
         })
         successCb[id] = (rawEmail?: [number, string, string, number][]) => {
-            console.log(id, findUIDL.name, rawEmail)
+            // console.log(id, findUIDL.name, rawEmail)
             onSuccess(rawEmail?.length != 0)
         }
         // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, findUIDL.name, e)
+            // console.log(id, findUIDL.name, e)
             onError(e)
         }
     })
@@ -330,12 +330,12 @@ export function read(id: number): Promise<void> {
             },
         })
         successCb[id] = () => {
-            console.log(id, sendEmail.name)
+            // console.log(id, sendEmail.name)
             onSuccess()
         }
         // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, read.name, e)
+            // console.log(id, read.name, e)
             onError(e)
         }
     })

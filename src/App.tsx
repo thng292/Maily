@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs"
 function App() {
     const [config, setConfig] = useContext(ConfigContext)
     const [mailBox, dispatchMailBox] = useContext(MailBoxContext)
-    console.log(mailBox)
+    // console.log(mailBox)
     return (
         <div>
             <p>
@@ -126,7 +126,7 @@ AAAASUVORK5CYII=`,
                             content: readFileSync(
                                 "./testmailImage.msg",
                             ).toString(),
-                            read: false
+                            read: false,
                         }),
                     )
                 }}
@@ -148,10 +148,18 @@ AAAASUVORK5CYII=`,
             >
                 ResetConfig
             </button>
-            <button onClick={()=>dispatchMailBox({action: "Refesh"})}>Refresh</button>
-            <button onClick={()=>dispatchMailBox({action: "Get"})}>Get</button>
-            <button onClick={()=>dispatchMailBox({action: "More"})}>More</button>
-            <button onClick={()=>dispatchMailBox({action: "MoreSent"})}>MoreSent</button>
+            <button onClick={() => dispatchMailBox({ action: "Refesh" })}>
+                Refresh
+            </button>
+            <button onClick={() => dispatchMailBox({ action: "Get" })}>
+                Get
+            </button>
+            <button onClick={() => dispatchMailBox({ action: "More" })}>
+                More
+            </button>
+            <button onClick={() => dispatchMailBox({ action: "MoreSent" })}>
+                MoreSent
+            </button>
         </div>
     )
 }

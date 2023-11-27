@@ -30,9 +30,9 @@ export function parseEmail(raw: RawEmail): Email {
         rawbody = lines
     }
 
-    console.log(parseEmail.name, raw.uidl, "Raw", lines)
-    console.log(parseEmail.name, raw.uidl, "Raw Header", rawheader)
-    console.log(parseEmail.name, raw.uidl, "Raw Body", rawbody)
+    // console.log(parseEmail.name, raw.uidl, "Raw", lines)
+    // console.log(parseEmail.name, raw.uidl, "Raw Header", rawheader)
+    // console.log(parseEmail.name, raw.uidl, "Raw Body", rawbody)
 
     const header = parseHeader(rawheader)
     let res = {
@@ -74,7 +74,7 @@ function parseHeader(raw: string[]) {
             header[line.slice(0, sep)] = line.slice(sep + 2)
         }
     }
-    console.log(parseHeader.name, raw, "=>", header)
+    // console.log(parseHeader.name, raw, "=>", header)
     return header
 }
 
@@ -95,7 +95,7 @@ function parseContentType(raw: string): {
         val = val.replaceAll('"', "")
         res[key] = val
     }
-    console.log(parseContentType.name, raw, "=>", res)
+    // console.log(parseContentType.name, raw, "=>", res)
     return res
 }
 
@@ -103,7 +103,7 @@ function parseContentDisposition(raw: string): {
     pos: string
     filename: string
 } {
-    console.log(parseContentDisposition.name, arguments)
+    // console.log(parseContentDisposition.name, arguments)
     let [pos, filename] = raw.split("; ")
     filename = filename.split("=")[1].replaceAll('"', "")
     return { pos, filename }
@@ -114,7 +114,7 @@ function parseMultipartBody(
     boundary: string,
     subtype: string,
 ): { content: HTMLElement; attachments: Attachment[] } {
-    console.log(parseMultipartBody.name, arguments)
+    // console.log(parseMultipartBody.name, arguments)
     // @ts-ignore
     const res: ReturnType<typeof parseMultipartBody> = { attachments: [] }
 
@@ -134,7 +134,7 @@ function parseMultipartBody(
             }
         }
         parts = parts.filter((val) => val.length)
-        console.log(parseMultipartBody.name, "Parts", parts)
+        // console.log(parseMultipartBody.name, "Parts", parts)
         return parts
     }
 
@@ -192,7 +192,7 @@ function parseMultipartBody(
             }
             break
         default:
-            console.log("Parsing other", raw)
+            // console.log("Parsing other", raw)
             res.attachments.push(parseOther(raw))
             break
     }
