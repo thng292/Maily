@@ -33,9 +33,9 @@ export function SaveDB() {
 window.addEventListener("beforeunload", SaveDB)
 
 dbWorker.onmessage = () => {
-    // console.log("Database opened")
+    console.log("Database opened")
     dbWorker.onmessage = (event) => {
-        // console.log(event.data)
+        console.log(event.data)
         if (event.data.id == saveDBId) {
             fs.writeFile(dbPath, event.data.buffer, (e) => {
                 if (e) console.error(e)
@@ -308,7 +308,7 @@ export function findUIDL(uidl: string): Promise<boolean> {
         })
         successCb[id] = (rawEmail?: [number, string, string, number][]) => {
             console.log(id, findUIDL.name, rawEmail)
-            onSuccess(!!rawEmail)
+            onSuccess(rawEmail?.length != 0)
         }
         // errorCb[id] = onError
         errorCb[id] = (e) => {

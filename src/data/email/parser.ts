@@ -26,6 +26,14 @@ export function parseEmail(raw: RawEmail): Email {
         }
     }
 
+    if (rawheader.length == 0 && rawbody.length == 0) {
+        rawbody = lines
+    }
+
+    console.log(parseEmail.name, raw.uidl, "Raw", lines)
+    console.log(parseEmail.name, raw.uidl, "Raw Header", rawheader)
+    console.log(parseEmail.name, raw.uidl, "Raw Body", rawbody)
+
     const header = parseHeader(rawheader)
     let res = {
         id: raw.id,
@@ -47,9 +55,7 @@ export function parseEmail(raw: RawEmail): Email {
         res.content = body.content
         res.attachment = body.attachments
     } else {
-        const content = document.createElement("p")
-        content.innerText = rawbody.join("")
-        res.content = content
+        res.content = parsePlain(rawbody)
     }
 
     return res
@@ -68,6 +74,7 @@ function parseHeader(raw: string[]) {
             header[line.slice(0, sep)] = line.slice(sep + 2)
         }
     }
+    console.log(parseHeader.name, raw, "=>", header)
     return header
 }
 
@@ -76,7 +83,6 @@ function parseContentType(raw: string): {
     subtype: string
     [key: string]: string
 } {
-    console.log(parseContentType.name, raw)
     const res: ReturnType<typeof parseContentType> = {
         type: "",
         subtype: "",
@@ -89,6 +95,7 @@ function parseContentType(raw: string): {
         val = val.replaceAll('"', "")
         res[key] = val
     }
+    console.log(parseContentType.name, raw, "=>", res)
     return res
 }
 
@@ -96,7 +103,7 @@ function parseContentDisposition(raw: string): {
     pos: string
     filename: string
 } {
-    console.log("fuck", raw)
+    console.log(parseContentDisposition.name, arguments)
     let [pos, filename] = raw.split("; ")
     filename = filename.split("=")[1].replaceAll('"', "")
     return { pos, filename }
@@ -107,41 +114,117 @@ function parseMultipartBody(
     boundary: string,
     subtype: string,
 ): { content: HTMLElement; attachments: Attachment[] } {
-    console.log(raw)
-    const startBound = "--" + boundary
-    const endBound = startBound + "--"
+    console.log(parseMultipartBody.name, arguments)
     // @ts-ignore
     const res: ReturnType<typeof parseMultipartBody> = { attachments: [] }
-    let gotHTML = false
-    let parts: string[][] = []
-    let buffer: string[] = []
-    for (let line of raw) {
-        if (line == startBound || line == endBound) {
-            if (buffer.length) {
-                parts.push(buffer)
-                buffer = []
+
+    function GetParts() {
+        const startBound = "--" + boundary
+        const endBound = startBound + "--"
+        let parts: string[][] = []
+        let buffer: string[] = []
+        for (let line of raw) {
+            if (line == startBound || line == endBound) {
+                if (buffer.length) {
+                    parts.push(buffer)
+                    buffer = []
+                }
+            } else {
+                buffer.push(line)
             }
         }
-        buffer.push(line)
+        parts = parts.filter((val) => val.length)
+        console.log(parseMultipartBody.name, "Parts", parts)
+        return parts
     }
-    console.log(parseMultipartBody.name, parts)
+
     switch (subtype) {
         case "mixed":
+            {
+                const parts = GetParts()
+
+                for (let part of parts) {
+                    const header = parseHeader(part)
+                    const contentType = parseContentType(header["Content-Type"])
+                    const tmp = parseMultipartBody(
+                        part,
+                        contentType.boundary,
+                        contentType.subtype,
+                    )
+                    res.content = tmp.content
+                    res.attachments.push(...tmp.attachments)
+                }
+            }
             break
-        case "alterative":
+        case "alternative":
+            {
+                // text only
+                const parts = GetParts()
+                let gotHTML = false
+
+                for (let part of parts) {
+                    const header = parseHeader(part)
+                    const contentType = parseContentType(header["Content-Type"])
+                    const tmp = parseMultipartBody(
+                        part.slice(part.indexOf("") + 1),
+                        contentType.boundary,
+                        contentType.subtype,
+                    )
+                    if (contentType.subtype == "plain") {
+                        if (!gotHTML) {
+                            res.content = tmp.content
+                        }
+                    } else {
+                        gotHTML = true
+                        res.content = tmp.content
+                    }
+                }
+            }
             break
         case "html":
+            {
+                res.content = parseHTML(raw)
+            }
             break
         case "plain":
+            {
+                res.content = parsePlain(raw)
+            }
             break
         default:
+            console.log("Parsing other", raw)
+            res.attachments.push(parseOther(raw))
             break
     }
     return res
 }
 
-function parseHTML(raw: string[]): HTMLElement {}
+function parseHTML(rawBody: string[]): HTMLElement {
+    const tmp = document.createElement("div")
+    tmp.innerHTML = ""
+    for (let i = 0; i < rawBody.length; i++) {
+        tmp.innerHTML += rawBody[i]
+    }
+    return tmp
+}
 
-function parsePlain(raw: string[]): string {}
+function parsePlain(rawBody: string[]): HTMLElement {
+    const content = document.createElement("p")
+    content.innerText = rawBody.join("")
+    return content
+}
 
-function parseOther(raw: string[]): Attachment {}
+function parseOther(rawWithHeader: string[]): Attachment {
+    const header = parseHeader(rawWithHeader)
+    const contentType = parseContentType(header["Content-Type"])
+    const contentPos = parseContentDisposition(header["Content-Disposition"])
+    const res: Attachment = {
+        filename: contentPos.filename,
+        mime: `${contentType.type}/${contentType.subtype}`,
+        contentBase64: "",
+    }
+    for (let i = 0; i < rawWithHeader.length; i++) {
+        res.contentBase64 += rawWithHeader[i].trim()
+    }
+    return res
+}

@@ -15,6 +15,7 @@ class POP3Wrapper {
 
     constructor() {
         this.socket = new Socket()
+        this.socket.setMaxListeners(20)
     }
 
     connect(server: string, port: number): Promise<void> {
@@ -85,7 +86,7 @@ class POP3Wrapper {
 
     STAT(): Promise<STATResult> {
         return new Promise((onRes, onErr) => {
-            let sub: string[] = []
+            let sub = ""
             this.socket.write("STAT\r\n")
             this.socket.once("data", (data) => {
                 if (data.toString().startsWith("+OK")) {
@@ -232,6 +233,7 @@ class SMTPWrapper {
         return new Promise((onRes, onErr) => {
             let socket: Socket
             socket = new Socket()
+            socket.setMaxListeners(20)
 
             //Connect
             const Connect = new Promise<void>((res, rej) => {

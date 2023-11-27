@@ -128,10 +128,10 @@ function useMailBoxReducer(config: Config) {
                         await POP3.connect(config.server, config.POP3port)
                         await POP3.USER(config.username)
                         await POP3.PASS(config.password)
-                        let newMails: RawEmail[] = []
-                        let uids: UIDLResult[] = []
                         try {
-                            uids = await POP3.UIDL()
+                            let newMails: RawEmail[] = []
+                            const uids = await POP3.UIDL()
+                            console.log("UIDS", uids)
                             for (let uid of uids) {
                                 if (!(await findUIDL(uid.uid))) {
                                     const mail = {
@@ -144,7 +144,7 @@ function useMailBoxReducer(config: Config) {
                                     await addRawEmail(
                                         mail,
                                         getDate(mail.content),
-                                    ).catch()
+                                    )
                                 }
                             }
                         } catch (e) {
@@ -210,7 +210,6 @@ function useMailBoxReducer(config: Config) {
                         const rawMails = await getEmails(25, 0)
                         const parsedMails = rawMails.map((rawMail, index) => {
                             const parsed = parseEmail(rawMail)
-                            parsed.id = index
                             return parsed
                         })
                         const sentMails = await getSentEmails(24, 0).then(
