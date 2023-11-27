@@ -1,77 +1,80 @@
 import { randomUUID } from "crypto"
-
-export type Attachment = {
-    filename: string
-    mime: string
-    contentBase64: string
-}
+import { Attachment } from "./types"
 
 export class MailBuilder {
-    sender: string
-    to: string[]
-    cc: string[]
-    bcc: string[]
-    subject: string
-    content: HTMLElement | null
-    attchments: Attachment[]
+    #sender: string
+    #to: string[]
+    #cc: string[]
+    #bcc: string[]
+    #subject: string
+    #content: HTMLElement | null
+    #attchments: Attachment[]
 
     constructor() {
-        this.sender = ""
-        this.to = []
-        this.cc = []
-        this.bcc = []
-        this.subject = ""
-        this.content = null
-        this.attchments = []
+        this.#sender = ""
+        this.#to = []
+        this.#cc = []
+        this.#bcc = []
+        this.#subject = ""
+        this.#content = null
+        this.#attchments = []
+    }
+
+    getSender() {
+        return this.#sender
+    }
+
+    getReceivers() {
+        return [...this.#to, ...this.#cc, ...this.#bcc]
     }
 
     addSender(sender: string) {
-        this.sender = sender
+        this.#sender = sender
         return this
     }
 
     addReceiver(receiver: string[]) {
-        this.to.push(...receiver)
+        this.#to.push(...receiver)
         return this
     }
 
     addCC(receiver: string[]) {
-        this.cc.push(...receiver)
+        this.#cc.push(...receiver)
         return this
     }
 
     addBCC(receiver: string[]) {
-        this.bcc.push(...receiver)
+        this.#bcc.push(...receiver)
         return this
     }
 
     addAttachment(attchments: Attachment[]) {
-        this.attchments.push(...attchments)
+        this.#attchments.push(...attchments)
         return this
     }
 
     addSubject(subject: string) {
-        this.subject = subject
+        this.#subject = subject
         return this
     }
 
     addContent(content: HTMLElement) {
-        this.content = content
+        this.#content = content
         return this
     }
 
     toString(): string {
         const messageID =
-            "Message-ID: <" + randomUUID() + "@" + this.sender + ">"
+            "Message-ID: <" + randomUUID() + "@" + this.#sender + ">"
         const date = "Date: " + new Date().toUTCString()
         const MIME_V = "MIME-Version: 1.0"
-        const from = this.sender.length ? `From: <${this.sender}>` : null
-        const to = this.to.length ? `To: ${this.to.join(", ")}` : null
-        const cc = this.cc.length ? `CC: ${this.cc.join(", ")}` : null
-        const subject = `Subject: ${this.subject}`
+        const from = this.#sender.length ? `From: <${this.#sender}>` : null
+        const to = this.#to.length ? `To: ${this.#to.join(", ")}` : null
+        const cc = this.#cc.length ? `CC: ${this.#cc.join(", ")}` : null
+        const subject = `Subject: ${this.#subject}`
         let textContent: string | null = null
 
-        if (this.content) {
+        if (this.#content) {
             let tmp = document.createElement("html")
             let head = document.createElement("head")
             head.innerHTML =
@@ -79,12 +82,15 @@ export class MailBuilder {
             tmp.appendChild(head)
 
             let body = document.createElement("body")
-            body.appendChild(this.content)
+            body.appendChild(this.#content)
             tmp.appendChild(body)
             textContent =
                 "<!DOCTYPE html>\r\n<html>\r\n" +
                 tmp.innerHTML.replaceAll("\n", "\r\n") +
                 "\r\n</html>\r\n\r\n"
+        } else {
+            this.#content = document.createElement("p")
+            textContent = ""
         }
 
         let res = [messageID, date, MIME_V, subject, from, to, cc]
@@ -93,17 +99,17 @@ export class MailBuilder {
 
         const fillContentIn = (addMimeMessage: boolean) => {
             let tmp = ""
-            if (this.content) {
+            if (this.#content) {
                 tmp += `Content-Type: multipart/alternative; boundary="${mimeBoudary[1]}"\r\n`
                 if (addMimeMessage) {
-                    tmp += "\r\nThis is a multi-part message in MIME format.\r\n"
+                    tmp +=
+                        "\r\nthis.#is a multi-part message in MIME format.\r\n"
                 }
                 tmp += mimeBoudary[1] + "\r\n"
                 tmp +=
                     "Content-Type: text/plain; charset=UTF-8; format=flowed\r\n"
                 tmp += "Content-Transfer-Encoding: 7bit\r\n\r\n"
-                tmp +=
-                    this.content.textContent?.replaceAll("\n", "\r\n") + "\r\n\r\n"
+                tmp += this.#content.textContent + "\r\n\r\n"
                 tmp += "--" + mimeBoudary[1] + "\r\n"
                 tmp += "Content-Type: text/html; charset=UTF-8;\r\n"
                 tmp += "Content-Transfer-Encoding: 7bit\r\n\r\n"
@@ -111,11 +117,8 @@ export class MailBuilder {
                 tmp += "--" + mimeBoudary[1] + "--\r\n"
             }
 
-            if (this.attchments) {
-                if (addMimeMessage && !this.content) {
-                    tmp += "\r\nThis is a multi-part message in MIME format.\r\n"
-                }
-                for (let item of this.attchments) {
+            if (this.#attchments) {
+                for (let item of this.#attchments) {
                     tmp += "--" + mimeBoudary[0] + "\r\n"
                     tmp += `Content-Type: ${item.mime}; name="${item.filename}"\r\n`
                     tmp += `Content-Disposition: attachment; filename="${item.filename}"\r\n`
@@ -127,15 +130,15 @@ export class MailBuilder {
             return tmp
         }
 
-        if (this.content && this.attchments.length) {
+        if (this.#content && this.#attchments.length) {
             const mimeHeader = `Content-Type: multipart/mixed; boundary="${mimeBoudary[0]}"`
             res = [
                 mimeHeader,
                 ...res,
-                "\r\nThis is a multi-part message in MIME format.\r\n",
+                "\r\nthis.#is a multi-part message in MIME format.",
                 "--" + mimeBoudary[0],
                 fillContentIn(false),
-                "--" +  mimeBoudary[0] + "--",
+                "--" + mimeBoudary[0] + "--",
             ]
         } else {
             res.push(fillContentIn(true))

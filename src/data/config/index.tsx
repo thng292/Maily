@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 type Second = number
+type Day = number
 
 type Filter = {
     name: string

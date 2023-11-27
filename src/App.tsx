@@ -1,18 +1,20 @@
 import { ConfigContext, MailBoxContext } from "@/data/provider"
-import { useContext, useRef } from "react"
+import { useContext } from "react"
 import { POP3Wrapper, SMTPWrapper } from "@/socket"
 import { MailBuilder } from "@/data/email"
+import { parseEmail } from "@/data/email/parser"
+import { readFileSync } from "node:fs"
 
 function App() {
     const [config, setConfig] = useContext(ConfigContext)
     const [mailBox, dispatchMailBox] = useContext(MailBoxContext)
-    const thisComponent = useRef<HTMLDivElement>(null)
+    console.log(mailBox)
     return (
         <div>
-            <p ref={thisComponent}>
+            <p>
                 <strong>{JSON.stringify(mailBox)}</strong>
             </p>
-            {JSON.stringify(config)}
+            <p>{JSON.stringify(config)}</p>
             <input
                 type="text"
                 onChange={(e) => {
@@ -70,7 +72,6 @@ function App() {
                         .addCC(["anhvu@fuck.fuck"])
                         .addBCC(["nhatphuoc@fuck.fuck"])
                         .addSubject("this is a test")
-                        .addContent(thisComponent.current!)
                         .addAttachment([
                             {
                                 filename: "test.png",
@@ -116,6 +117,41 @@ AAAASUVORK5CYII=`,
             >
                 Test Build Email
             </button>
+            <button
+                onClick={() => {
+                    console.log(
+                        parseEmail({
+                            id: 1,
+                            uidl: "skldfjlsdfkj",
+                            content: readFileSync(
+                                "./testmailImage.msg",
+                            ).toString(),
+                            read: false
+                        }),
+                    )
+                }}
+            >
+                Test Parse Email
+            </button>
+            <button
+                onClick={() => {
+                    setConfig({
+                        server: "127.0.0.1",
+                        POP3port: 3335,
+                        SMTPport: 2225,
+                        username: "fuck@fuck.fuck",
+                        password: "sdjflasdf",
+                        filters: [],
+                        pullInterval: 120,
+                    })
+                }}
+            >
+                ResetConfig
+            </button>
+            <button onClick={()=>dispatchMailBox({action: "Refesh"})}>Refresh</button>
+            <button onClick={()=>dispatchMailBox({action: "Get"})}>Get</button>
+            <button onClick={()=>dispatchMailBox({action: "More"})}>More</button>
+            <button onClick={()=>dispatchMailBox({action: "MoreSent"})}>MoreSent</button>
         </div>
     )
 }

@@ -11,8 +11,7 @@ export const MailBoxContext = createContext<
 >([
     {
         mailBox: {},
-        loading: false,
-        success: true,
+        state: 'loading',
         error: "",
     },
     (_) => {},

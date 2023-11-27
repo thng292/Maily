@@ -1,7 +1,7 @@
 import { Socket } from "node:net"
 
 type STATResult = {
-    id: number
+    count: number
     size: number
 }
 
@@ -34,7 +34,7 @@ class POP3Wrapper {
                 }
             })
             this.socket.once("error", (data) => {
-                onErr(data.name)
+                onErr(data.message)
             })
         })
     }
@@ -56,7 +56,7 @@ class POP3Wrapper {
                 }
             })
             this.socket.once("error", (data) => {
-                onErr(data.name)
+                onErr(data.message)
             })
         })
     }
@@ -78,15 +78,14 @@ class POP3Wrapper {
                 }
             })
             this.socket.once("error", (data) => {
-                onErr(data.name)
+                onErr(data.message)
             })
         })
     }
 
-    STAT(): Promise<STATResult[]> {
+    STAT(): Promise<STATResult> {
         return new Promise((onRes, onErr) => {
             let sub: string[] = []
-            let re: STATResult[] = []
             this.socket.write("STAT\r\n")
             this.socket.once("data", (data) => {
                 if (data.toString().startsWith("+OK")) {
@@ -94,11 +93,50 @@ class POP3Wrapper {
                         .toString()
                         .replace("+OK ", "")
                         .replace("\r\n", "")
-                        .split(" ")
-                    for (let i = 0; i < sub.length / 2; i++) {
+                    const sep = sub.indexOf(" ")
+                    onRes({
+                        count: parseInt(sub.slice(0, sep - 1)),
+                        size: parseInt(sub.slice(sep + 1)),
+                    } satisfies STATResult)
+                }
+                if (data.toString().startsWith("-ERR")) {
+                    onErr(
+                        data
+                            .toString()
+                            .replace("-ERR ", "")
+                            .replace("\r\n", ""),
+                    )
+                }
+            })
+            this.socket.once("error", (data) => {
+                onErr(data.message)
+            })
+        })
+    }
+
+    UIDL(msgNumber?: number): Promise<UIDLResult[]> {
+        return new Promise((onRes, onErr) => {
+            let sub: string[] = []
+            let re: UIDLResult[] = []
+            if (msgNumber == undefined) {
+                this.socket.write("UIDL\r\n")
+            } else {
+                this.socket.write(`UIDL ${msgNumber}\r\n`)
+            }
+            this.socket.once("data", (data) => {
+                if (data.toString().startsWith("+OK")) {
+                    sub = data
+                        .toString()
+                        .replace("+OK\r\n", "")
+                        .replace("\r\n.\r\n", "")
+                        .split("\r\n")
+                    for (let item of sub) {
+                        const sep = item.indexOf(" ")
+                        const id = parseInt(item.slice(0, sep))
+                        const uid = item.slice(sep + 1)
                         re.push({
-                            id: parseInt(sub[i * 2]),
-                            size: parseInt(sub[i * 2 + 1]),
+                            id,
+                            uid,
                         })
                     }
                     onRes(re)
@@ -113,75 +151,8 @@ class POP3Wrapper {
                 }
             })
             this.socket.once("error", (data) => {
-                onErr(data.name)
+                onErr(data.message)
             })
-        })
-    }
-
-    UIDL(msgNumber?: number): Promise<UIDLResult[]> {
-        return new Promise((onRes, onErr) => {
-            let sub: string[] = []
-            let re: UIDLResult[] = []
-            if (msgNumber == undefined) {
-                this.socket.write("UIDL\r\n")
-                this.socket.once("data", (data) => {
-                    if (data.toString().startsWith("+OK")) {
-                        sub = data
-                            .toString()
-                            .replace("+OK\r\n", "")
-                            .replace("\r\n.\r\n", "")
-                            .replaceAll("\r\n", " ")
-                            .split(" ")
-                        for (let i = 0; i < sub.length / 2; i++) {
-                            re.push({
-                                id: parseInt(sub[i * 2]),
-                                uid: sub[i * 2 + 1],
-                            })
-                        }
-                        onRes(re)
-                    }
-                    if (data.toString().startsWith("-ERR")) {
-                        onErr(
-                            data
-                                .toString()
-                                .replace("-ERR ", "")
-                                .replace("\r\n", ""),
-                        )
-                    }
-                })
-                this.socket.once("error", (data) => {
-                    onErr(data.name)
-                })
-            } else {
-                this.socket.write(`UIDL ${msgNumber}\r\n`)
-                this.socket.once("data", (data) => {
-                    if (data.toString().startsWith("+OK")) {
-                        sub = data
-                            .toString()
-                            .replace("+OK ", "")
-                            .replace("\r\n", "")
-                            .split(" ")
-                        for (let i = 0; i < sub.length / 2; i++) {
-                            re.push({
-                                id: parseInt(sub[i * 2]),
-                                uid: sub[i * 2 + 1],
-                            })
-                        }
-                        onRes(re)
-                    }
-                    if (data.toString().startsWith("-ERR")) {
-                        onErr(
-                            data
-                                .toString()
-                                .replace("-ERR ", "")
-                                .replace("\r\n", ""),
-                        )
-                    }
-                })
-                this.socket.once("error", (data) => {
-                    onErr(data.name)
-                })
-            }
         })
     }
 
@@ -198,12 +169,12 @@ class POP3Wrapper {
                         data
                             .toString()
                             .replace("-ERR ", "")
-                            .replace("\r\n", ""),
+                            .replace("\r\n", "\n"),
                     )
                 }
             })
             this.socket.once("error", (data) => {
-                onErr(data.name)
+                onErr(data.message)
             })
         })
     }
@@ -225,7 +196,7 @@ class POP3Wrapper {
                 }
             })
             this.socket.once("error", (data) => {
-                onErr(data.name)
+                onErr(data.message)
             })
         })
     }
