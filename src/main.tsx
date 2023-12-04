@@ -21,7 +21,7 @@ const router = createBrowserRouter([
     {
         path: "/",
         index: true,
-        element: <App />,
+        element: <AppContainer />,
     },
     {
         path: "firsttime",
@@ -32,44 +32,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
         <DataProvider>
-            <ThemeWrapper>
-                <RouterProvider router={router} />
-            </ThemeWrapper>
+            <App />
         </DataProvider>
     </React.StrictMode>,
 )
 
 postMessage({ payload: "removeLoading" }, "*")
-
-function ThemeWrapper({ children }: { children: ReactNode }) {
-    const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)")
-
-    // Update the theme only if the mode changes
-    const theme = React.useMemo(
-        () => createTheme(getDesignTokens(prefersDarkMode ? "dark" : "light")),
-        [prefersDarkMode],
-    )
-    return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-        </ThemeProvider>
-    )
-}
-
-const getDesignTokens = (mode: PaletteMode) => ({
-    palette: {
-        mode,
-        ...(mode === "light"
-            ? {
-                  // palette values for light mode
-                  primary: { main: "#000" },
-                  divider: "#111",
-              }
-            : {
-                  // palette values for dark mode
-                  primary: { main: "#fff" },
-                  divider: "#eee",
-              }),
-    },
-})
