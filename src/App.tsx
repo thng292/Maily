@@ -1,6 +1,6 @@
 import { ConfigContext, MailBoxContext } from "@/data/provider"
 import { useContext } from "react"
-import { MailBuilder, Email } from "@/data/email"
+import { Email } from "@/data/email"
 import { Navigate } from "react-router-dom"
 
 function gogo(mails: Email[]) {

@@ -1,10 +1,11 @@
 import { Email } from "@/data/email/types"
-import EmailDisplay from "./DisplayEmail"
-import EmailList from "./EmailList"
-import NavigationBar from "./NavigationBar"
+import EmailDisplay from "../components/DisplayEmail"
+import EmailList from "../components/EmailList"
+import NavigationBar from "../components/NavigationBar"
 import { useContext, useState } from "react"
-import { Editor } from "./editor"
+import { Editor } from "../components/editor"
 import { ConfigContext, MailBoxContext } from "@/data/provider"
+import { Navigate } from "react-router-dom"
 
 const emptyMail: Email = {
     id: 2,
@@ -26,6 +27,14 @@ const AppContainer = () => {
     const [config, setConfig] = useContext(ConfigContext)
     const [mailBox, dispatchMailBox] = useContext(MailBoxContext)
     const [selectedNavigation, setSelectedNavigation] = useState("inbox")
+    if (!config.validated) {
+        return (
+            <Navigate
+                to="firsttime"
+                replace
+            />
+        )
+    }
     return (
         <div className="flex w-screen h-screen">
             <NavigationBar

@@ -2,7 +2,7 @@ import { useTheme } from "@mui/material/styles"
 import DoneIcon from "@mui/icons-material/Done"
 import { TextField, Button, Stack, Alert, AlertTitle } from "@mui/material"
 import { useRef, useState } from "react"
-import { POP3Wrapper, SMTPWrapper } from "./socket"
+import { POP3Wrapper, SMTPWrapper } from "../socket"
 import Collapse from "@mui/material/Collapse"
 import { useNavigate } from "react-router-dom"
 
@@ -20,9 +20,9 @@ const defaultErr = {
 function FirstTime() {
     const navigate = useNavigate()
     const theme = useTheme()
-    const [inputState, setInputState] = useState<"good" | "normal" | "bad">(
-        "normal",
-    )
+    const [inputState, setInputState] = useState<
+        "good" | "normal" | "bad" | "loading"
+    >("normal")
     const [errorState, setErrorState] = useState(defaultErr)
     const email = useRef<HTMLInputElement>(null)
     const password = useRef<HTMLInputElement>(null)
@@ -33,6 +33,7 @@ function FirstTime() {
     const pop3Port = useRef<HTMLInputElement>(null)
 
     async function CheckInput() {
+        setInputState("loading")
         const oldErrorState = structuredClone(defaultErr)
         if (pop3Server.current && pop3Port.current) {
             const pop3 = new POP3Wrapper()
@@ -40,6 +41,7 @@ function FirstTime() {
             if (!pop3P) {
                 oldErrorState.pop3Port = true
                 oldErrorState.err = "Check your POP3 port number"
+                setInputState("bad")
                 setErrorState(() => oldErrorState)
                 return
             }
@@ -48,6 +50,7 @@ function FirstTime() {
                 oldErrorState.err = e
             })
             if (oldErrorState.err.length) {
+                setInputState("bad")
                 setErrorState(() => oldErrorState)
                 return
             }
@@ -58,6 +61,7 @@ function FirstTime() {
                 })
             }
             if (oldErrorState.err.length) {
+                setInputState("bad")
                 setErrorState(() => oldErrorState)
                 return
             }
@@ -68,6 +72,7 @@ function FirstTime() {
                 })
             }
             if (oldErrorState.err.length) {
+                setInputState("bad")
                 setErrorState(() => oldErrorState)
                 return
             }
@@ -79,6 +84,7 @@ function FirstTime() {
             if (!smtpP) {
                 oldErrorState.smtpPort = true
                 oldErrorState.err = "Check your SMPT port number"
+                setInputState("bad")
                 setErrorState(() => oldErrorState)
 
                 return
@@ -209,7 +215,14 @@ function FirstTime() {
                         >
                             <DoneIcon />
                         </div>
-
+                        {inputState == "loading" && (
+                            <div
+                                className="animate-spin border-t-black border-transparent border-solid w-8 h-8"
+                                style={{
+                                    borderRadius: "50%",
+                                }}
+                            ></div>
+                        )}
                         <Button
                             variant={"contained"}
                             onClick={CheckInput}
