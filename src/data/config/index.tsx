@@ -13,6 +13,7 @@ type Filter = {
 }
 
 type Config = {
+    validated: boolean,
     filters: Filter[]
     username: string
     password: string
@@ -23,6 +24,7 @@ type Config = {
 }
 
 const DefaultConfig = {
+    validated: false,
     filters: [],
     username: "",
     password: "",
@@ -30,7 +32,7 @@ const DefaultConfig = {
     SMTPport: 0,
     POP3port: 0,
     pullInterval: 120,
-}
+} satisfies Config
 
 function useConfig(): [Config, (newConfig: Config) => void] {
     const CONFIG_KEY = "config" as const

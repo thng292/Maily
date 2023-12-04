@@ -63,15 +63,14 @@ export function parseEmail(raw: RawEmail): Email {
 
 function parseHeader(raw: string[]) {
     const header: { [key: string]: string } = {}
+    let last = ''
     for (let line of raw) {
-        if (line.length == 0) {
-            break
-        }
-        if (line.startsWith(" boundary")) {
-            header["Content-Type"] += line
+        if (line.startsWith(" ")) {
+            header[last] += line
         } else {
             const sep = line.indexOf(":")
-            header[line.slice(0, sep)] = line.slice(sep + 2)
+            last = line.slice(0, sep)
+            header[last] = line.slice(sep + 2)
         }
     }
     // console.log(parseHeader.name, raw, "=>", header)

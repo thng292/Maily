@@ -223,6 +223,18 @@ class POP3Wrapper {
 }
 
 class SMTPWrapper {
+    test(server: string, port: number) {
+        return new Promise<void>((res, rej) => {
+            let socket = new Socket()
+            socket.setMaxListeners(20)
+            socket.connect(port, server, () => {})
+            socket.once("error", (e) => rej(e.message))
+            socket.once("connect", () => {
+                res()
+            })
+        })
+    }
+
     send(
         server: string,
         port: number,
@@ -231,9 +243,10 @@ class SMTPWrapper {
         content: string,
     ): Promise<void> {
         return new Promise((onRes, onErr) => {
-            let socket: Socket
-            socket = new Socket()
+            let socket = new Socket()
             socket.setMaxListeners(20)
+
+            socket.once("error", (e) => onErr(e.message))
 
             //Connect
             const Connect = new Promise<void>((res, rej) => {

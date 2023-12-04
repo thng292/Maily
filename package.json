@@ -28,6 +28,7 @@
     "@mui/icons-material": "^5.14.18",
     "@mui/material": "^5.14.18",
     "lexical": "^0.12.2",
+    "react-router-dom": "^6.20.1",
     "sql.js": "^1.8.0"
   },
   "devDependencies": {

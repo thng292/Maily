@@ -1,4 +1,4 @@
-import { useMailBoxReducer } from "./email"
+import { useMailBoxReducer, type FilteredMailBox } from "./email"
 import { useConfig, DefaultConfig } from "./config"
 import { createContext, ReactNode } from "react"
 
@@ -11,8 +11,10 @@ export const MailBoxContext = createContext<
 >([
     {
         mailBox: {},
-        state: 'loading',
+        state: "loading",
         error: "",
+        page: 1,
+        sentPage: 1,
     },
     (_) => {},
 ])

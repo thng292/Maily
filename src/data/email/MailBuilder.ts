@@ -80,13 +80,12 @@ export class MailBuilder {
             head.innerHTML =
                 '<meta http-equiv="content-type" content="text/html; charset=UTF-8">'
             tmp.appendChild(head)
-
             let body = document.createElement("body")
             body.appendChild(this.#content)
             tmp.appendChild(body)
             textContent =
                 "<!DOCTYPE html>\r\n<html>\r\n" +
-                tmp.innerHTML.replaceAll("\n", "\r\n") +
+                tmp.innerHTML.replaceAll('\n','\r\n')
                 "\r\n</html>\r\n\r\n"
         } else {
             this.#content = document.createElement("p")
@@ -103,7 +102,7 @@ export class MailBuilder {
                 tmp += `Content-Type: multipart/alternative; boundary="${mimeBoudary[1]}"\r\n`
                 if (addMimeMessage) {
                     tmp +=
-                        "\r\nthis.#is a multi-part message in MIME format.\r\n"
+                        "\r\nthis is a multi-part message in MIME format.\r\n"
                 }
                 tmp += mimeBoudary[1] + "\r\n"
                 tmp +=
@@ -135,7 +134,7 @@ export class MailBuilder {
             res = [
                 mimeHeader,
                 ...res,
-                "\r\nthis.#is a multi-part message in MIME format.",
+                "\r\nThis is a multi-part message in MIME format.",
                 "--" + mimeBoudary[0],
                 fillContentIn(false),
                 "--" + mimeBoudary[0] + "--",

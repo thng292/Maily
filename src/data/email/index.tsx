@@ -76,6 +76,7 @@ function useMailBoxReducer(config: Config) {
         eraseOld: boolean,
     ) {
         const old = structuredClone(mailBoxState.mailBox)
+        console.log(old)
         if (mails != null) {
             if (eraseOld) {
                 for (let filter of config.filters) {
@@ -84,6 +85,7 @@ function useMailBoxReducer(config: Config) {
                 old["Inbox"] = []
                 old["Sent"] = []
             }
+            console.log(old)
             for (let i = 0; i < mails.length; i++) {
                 let found = false
                 for (let filter of config.filters) {
@@ -115,6 +117,9 @@ function useMailBoxReducer(config: Config) {
 
     const mailBoxDispatch = useCallback(
         async (action: ActionType) => {
+            if (!config.server.length) {
+                return
+            }
             setMailBoxState((old) => ({
                 ...old,
                 state: "loading",
@@ -207,11 +212,11 @@ function useMailBoxReducer(config: Config) {
                 case "Get":
                     try {
                         const rawMails = await getEmails(25, 0)
-                        const parsedMails = rawMails.map((rawMail, index) => {
-                            const parsed = parseEmail(rawMail)
-                            return parsed
-                        })
-                        const sentMails = await getSentEmails(24, 0).then(
+                        const parsedMails = rawMails.map((rawMail) =>
+                            parseEmail(rawMail),
+                        )
+                        console.log(parsedMails)
+                        const sentMails = await getSentEmails(25, 0).then(
                             (data) => data.map((value) => parseEmail(value)),
                         )
                         const newState = filterAndAdd(
@@ -219,13 +224,14 @@ function useMailBoxReducer(config: Config) {
                             sentMails,
                             true,
                         )
-                        setMailBoxState({
+                        console.log(newState)
+                        setMailBoxState((old) => ({
                             mailBox: newState,
                             state: "success",
                             error: null,
                             page: 1,
                             sentPage: 1,
-                        })
+                        }))
                     } catch (e) {
                         setFail(e as string)
                     }
@@ -269,36 +275,16 @@ function useMailBoxReducer(config: Config) {
     }, [])
 
     useEffect(() => {
-        mailBoxDispatch({ action: "Get" })
-        const tmp = setInterval(
-            () => mailBoxDispatch({ action: "Refesh" }),
-            config.pullInterval * 1000,
-        )
-        return () => clearInterval(tmp)
+        if (config.server.length) {
+            mailBoxDispatch({ action: "Get" })
+            const tmp = setInterval(
+                () => mailBoxDispatch({ action: "Refesh" }),
+                config.pullInterval * 1000,
+            )
+            return () => clearInterval(tmp)
+        }
+        return () => {}
     }, [config])
-
-    // useEffect(() => {
-    //     console.log(mailBox)
-    //     let res: FilteredMailBox = { Inbox: [] }
-    //     for (let filter of config.filters) {
-    //         res[filter.name] = []
-    //     }
-    //     for (let i = 0; i < mailBox.length; i++) {
-    //         for (let filter of config.filters) {
-    //             if (match(mailBox[i], filter)) {
-    //                 res[filter.name].push(mailBox[i])
-    //             } else {
-    //                 res["Inbox"].push(mailBox[i])
-    //             }
-    //         }
-    //     }
-    //     res["Inbox"].push(...mailBox)
-    //     // Add Sent
-    //     res["Sent"].push(...[])
-    //     setMailBoxState((prev) => {
-    //         return { ...prev, mailBox: res }
-    //     })
-    // }, [mailBox, config])
 
     return [mailBoxState, mailBoxDispatch] as [
         MailBoxState,
