@@ -1,24 +1,25 @@
 import { useTheme } from "@mui/material/styles"
 import DoneIcon from "@mui/icons-material/Done"
 import { TextField, Button, Stack, Alert, AlertTitle } from "@mui/material"
-import { useRef, useState } from "react"
+import { useContext, useRef, useState } from "react"
 import { POP3Wrapper, SMTPWrapper } from "../socket"
 import Collapse from "@mui/material/Collapse"
 import { useNavigate } from "react-router-dom"
+import { ConfigContext } from "@/data/provider"
 
 const variant = "standard"
 const defaultErr = {
     email: false,
     password: false,
-    smtpServer: false,
     smtpPort: false,
-    pop3Server: false,
+    server: false,
     pop3Port: false,
     err: "",
 }
 
 function FirstTime() {
     const navigate = useNavigate()
+    const [config, updateConfig] = useContext(ConfigContext)
     const theme = useTheme()
     const [inputState, setInputState] = useState<
         "good" | "normal" | "bad" | "loading"
@@ -27,15 +28,14 @@ function FirstTime() {
     const email = useRef<HTMLInputElement>(null)
     const password = useRef<HTMLInputElement>(null)
 
-    const smtpServer = useRef<HTMLInputElement>(null)
+    const server = useRef<HTMLInputElement>(null)
     const smtpPort = useRef<HTMLInputElement>(null)
-    const pop3Server = useRef<HTMLInputElement>(null)
     const pop3Port = useRef<HTMLInputElement>(null)
 
     async function CheckInput() {
         setInputState("loading")
         const oldErrorState = structuredClone(defaultErr)
-        if (pop3Server.current && pop3Port.current) {
+        if (server.current && pop3Port.current) {
             const pop3 = new POP3Wrapper()
             const pop3P = Number(pop3Port.current.value)
             if (!pop3P) {
@@ -45,8 +45,8 @@ function FirstTime() {
                 setErrorState(() => oldErrorState)
                 return
             }
-            await pop3.connect(pop3Server.current.value, pop3P).catch((e) => {
-                oldErrorState.pop3Port = oldErrorState.pop3Server = true
+            await pop3.connect(server.current.value, pop3P).catch((e) => {
+                oldErrorState.pop3Port = oldErrorState.server = true
                 oldErrorState.err = e
             })
             if (oldErrorState.err.length) {
@@ -78,7 +78,7 @@ function FirstTime() {
             }
         }
         console.log("Checking SMTP")
-        if (smtpServer.current && smtpPort.current) {
+        if (server.current && smtpPort.current) {
             const SMTP = new SMTPWrapper()
             const smtpP = Number(smtpPort.current.value)
             if (!smtpP) {
@@ -89,8 +89,8 @@ function FirstTime() {
 
                 return
             }
-            await SMTP.test(smtpServer.current.value, smtpP).catch((e) => {
-                oldErrorState.smtpServer = oldErrorState.smtpPort = true
+            await SMTP.test(server.current.value, smtpP).catch((e) => {
+                oldErrorState.server = oldErrorState.smtpPort = true
                 oldErrorState.err = e
             })
         }
@@ -155,56 +155,34 @@ function FirstTime() {
                         label="Password"
                         inputRef={password}
                         error={errorState.password}
-                    ></TextField>
+                    />
+                    <TextField
+                        variant={variant}
+                        size="small"
+                        placeholder="SMTP server"
+                        inputRef={server}
+                        label="SMTP server"
+                        error={errorState.server}
+                    />
                     <div className="flex gap-2">
                         <TextField
-                            sx={{
-                                flex: 4,
-                            }}
                             variant={variant}
                             size="small"
-                            placeholder="SMTP server"
-                            inputRef={smtpServer}
-                            label="SMTP server"
-                            error={errorState.smtpServer}
-                        ></TextField>
-                        <TextField
-                            sx={{
-                                flex: 1,
-                            }}
-                            variant={variant}
-                            size="small"
-                            placeholder="Port"
-                            label="Port"
+                            placeholder="SMTP port"
+                            label="SMTP port"
                             type="number"
                             error={errorState.smtpPort}
                             inputRef={smtpPort}
-                        ></TextField>
-                    </div>
-                    <div className="flex gap-2">
+                        />
                         <TextField
-                            sx={{
-                                flex: 4,
-                            }}
                             variant={variant}
                             size="small"
-                            placeholder="POP3 server"
-                            label="POP3 server"
-                            error={errorState.pop3Server}
-                            inputRef={pop3Server}
-                        ></TextField>
-                        <TextField
-                            sx={{
-                                flex: 1,
-                            }}
-                            variant={variant}
-                            size="small"
-                            placeholder="Port"
-                            label="Port"
+                            placeholder="POP3 port"
+                            label="POP3 port"
                             type="number"
                             error={errorState.pop3Port}
                             inputRef={pop3Port}
-                        ></TextField>
+                        />
                     </div>
                     <div className="flex justify-end gap-2 items-center">
                         <div
@@ -233,7 +211,15 @@ function FirstTime() {
                             variant={"contained"}
                             disabled={inputState != "good"}
                             onClick={() => {
-                                console.log("navigating ")
+                                updateConfig({
+                                    ...config,
+                                    validated: true,
+                                    username: email.current!.value,
+                                    password: password.current!.value,
+                                    server: server.current!.value,
+                                    SMTPport: Number(smtpPort.current!.value),
+                                    POP3port: Number(pop3Port.current!.value),
+                                })
                                 navigate("/", {
                                     replace: true,
                                     relative: "route",

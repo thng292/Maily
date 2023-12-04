@@ -16,12 +16,13 @@ import {
     ThemeProvider,
     useMediaQuery,
 } from "@mui/material"
+import AppContainer from "./screen/AppContainer"
 
 const router = createBrowserRouter([
     {
         path: "/",
         index: true,
-        element: <App />,
+        element: <AppContainer />,
     },
     {
         path: "firsttime",
