@@ -52,13 +52,14 @@ async function createWindow() {
             nodeIntegration: true,
             contextIsolation: false,
         },
+        autoHideMenuBar: true,
     })
 
     if (url) {
         // electron-vite-vue#298
         win.loadURL(url)
         // Open devTool if the app is not packaged
-        win.webContents.openDevTools();
+        win.webContents.openDevTools()
     } else {
         win.loadFile(indexHtml)
     }

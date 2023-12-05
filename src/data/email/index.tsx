@@ -17,6 +17,7 @@ import {
     SaveDB,
     getEmails,
     getSentEmails,
+    read,
 } from "./db"
 import { POP3Wrapper, SMTPWrapper, UIDLResult } from "@/socket"
 import { getDate, parseEmail } from "./parser"
@@ -56,6 +57,8 @@ type ActionType =
     | { action: "Get" }
     | { action: "More" }
     | { action: "MoreSent" }
+    | { action: "Read"; payload: string }
+    | { action: "Unread"; payload: string }
     | {
           action: "DeleteSend"
           payload: number[]
@@ -244,7 +247,6 @@ function useMailBoxReducer(config: Config) {
                         )
                         const parsedMails = rawMails.map((rawMail, index) => {
                             const parsed = parseEmail(rawMail)
-                            parsed.id = index + (mailBoxState.page - 1) * 25
                             return parsed
                         })
                         const newState = filterAndAdd(parsedMails, null, false)
@@ -260,6 +262,42 @@ function useMailBoxReducer(config: Config) {
                     }
                     break
                 case "MoreSent":
+                    try {
+                        const rawMails = await getSentEmails(
+                            mailBoxState.page * 25,
+                            (mailBoxState.page - 1) * 25,
+                        )
+                        const parsedMails = rawMails.map((rawMail, index) => {
+                            const parsed = parseEmail(rawMail)
+                            return parsed
+                        })
+                        const newState = filterAndAdd(null, parsedMails, false)
+                        setMailBoxState((old) => ({
+                            mailBox: newState,
+                            state: "success",
+                            error: null,
+                            page: old.page + 1,
+                            sentPage: 1,
+                        }))
+                    } catch (e) {
+                        setFail(e as string)
+                    }
+                    break
+                case "Read":
+                    try {
+                        await read(action.payload)
+                    } catch (e) {
+                        setFail(e as string)
+                    }
+                    mailBoxDispatch({ action: "Get" })
+                    break
+                case "Unread":
+                    try {
+                        await read(action.payload)
+                    } catch (e) {
+                        setFail(e as string)
+                    }
+                    mailBoxDispatch({ action: "Get" })
                     break
                 default:
                     break

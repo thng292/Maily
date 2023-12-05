@@ -1,32 +1,32 @@
-import { Email } from "@/data/email/types"
-import EmailDisplay from "../components/DisplayEmail"
-import EmailList from "../components/EmailList"
-import NavigationBar from "../components/NavigationBar"
 import { useContext, useState } from "react"
-import { Editor } from "../components/editor"
 import { ConfigContext, MailBoxContext } from "@/data/provider"
 import { Navigate } from "react-router-dom"
-
-const emptyMail: Email = {
-    id: 2,
-    messageId: "ghi789",
-    uidl: "jkl012",
-    replyTo: "johndoe@example.com",
-    sentTime: new Date("2023-11-26T14:45:00Z"),
-    sender: "janedoe@example.com",
-    receiver: ["johndoe@example.com"],
-    CC: ["bob@example.com"],
-    subject: "Project Update",
-    content: document.createElement("div"),
-    attachment: [],
-    read: true,
-}
+import {
+    Button,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    useMediaQuery,
+} from "@mui/material"
+import InboxIcon from "@mui/icons-material/Inbox"
+import SendIcon from "@mui/icons-material/Send"
+import AddIcon from "@mui/icons-material/Add"
+import FolderOpenIcon from "@mui/icons-material/FolderOpen"
+import { useTheme } from "@mui/material/styles"
+import { Email } from "@/data/email"
+import { DisplayMail } from "../components/DisplayMail"
+import { DisplayMailList } from "../components/DisplayMailList"
 
 const AppContainer = () => {
-    const [displayEmail, setDisplayEmail] = useState<Email>()
+    const theme = useTheme()
+    const largeScreen = useMediaQuery("(min-width: 1280px)")
+    console.log(largeScreen)
     const [config, setConfig] = useContext(ConfigContext)
     const [mailBox, dispatchMailBox] = useContext(MailBoxContext)
-    const [selectedNavigation, setSelectedNavigation] = useState("inbox")
+    const [selectedFilter, setSelectedFilter] = useState("Inbox")
+    const [selectedMail, setSelectedMail] = useState<Email | null>(null)
     if (!config.validated) {
         return (
             <Navigate
@@ -36,17 +36,87 @@ const AppContainer = () => {
         )
     }
     return (
-        <div className="flex w-screen h-screen">
-            <NavigationBar
-                selectedNavigation={selectedNavigation}
-                setSelectedNavigation={setSelectedNavigation}
-            ></NavigationBar>
-            <EmailList
-                setDisplayEmail={setDisplayEmail}
-                mailList={mailBox.mailBox[selectedNavigation]}
-            ></EmailList>
-            <EmailDisplay displayEmail={displayEmail}></EmailDisplay>
-            {/* <Editor></Editor> */}
+        <div className="flex flex-row overflow-hidden">
+            <div
+                className="basis-48 flex flex-col flex-shrink-0"
+                style={{
+                    height: "100dvh",
+                }}
+            >
+                <List dense>
+                    <ListItem>
+                        <Button
+                            onClick={() => setSelectedFilter("")}
+                            endIcon={<AddIcon />}
+                            variant="outlined"
+                        >
+                            Compose
+                        </Button>
+                    </ListItem>
+
+                    <ListItemButton
+                        selected={
+                            selectedFilter == "Inbox" || selectedFilter == ""
+                        }
+                        onClick={() => setSelectedFilter("Inbox")}
+                    >
+                        <ListItemIcon>
+                            <InboxIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={"Inbox"} />
+                    </ListItemButton>
+                    <ListItemButton
+                        selected={selectedFilter == "Sent"}
+                        onClick={() => setSelectedFilter("Sent")}
+                    >
+                        <ListItemIcon>
+                            <SendIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={"Sent"} />
+                    </ListItemButton>
+                </List>
+                <List>
+                    <ListItem>
+                        <Button
+                            endIcon={<AddIcon />}
+                            onClick={() => {}}
+                            variant="outlined"
+                        >
+                            Add Filter
+                        </Button>
+                    </ListItem>
+
+                    {Object.keys(mailBox.mailBox)
+                        .filter((val) => val != "Inbox" && val != "Sent")
+                        .map((val) => (
+                            <ListItemButton
+                                id={val}
+                                selected={selectedFilter == val}
+                                onClick={() => setSelectedFilter(val)}
+                            >
+                                <ListItemIcon>
+                                    <FolderOpenIcon></FolderOpenIcon>
+                                </ListItemIcon>
+                                <ListItemText primary={val} />
+                            </ListItemButton>
+                        ))}
+                </List>
+            </div>
+            <DisplayMailList
+                mailList={
+                    mailBox.mailBox[
+                        selectedFilter.length ? selectedFilter : "Inbox"
+                    ]
+                }
+                largeScreen={largeScreen}
+                setSelectedMail={setSelectedMail}
+                display={largeScreen || !selectedMail}
+            />
+
+            <DisplayMail
+                mail={selectedMail}
+                close={() => setSelectedMail(null)}
+            />
         </div>
     )
 }

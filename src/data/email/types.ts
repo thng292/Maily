@@ -4,7 +4,6 @@ export type Attachment = {
     contentBase64: string
 }
 
-
 export type Email = {
     id: number
     messageId: string
@@ -12,8 +11,8 @@ export type Email = {
     replyTo: string | null
     sentTime: Date
     sender: string
-    receiver: string[],
-    CC: string[],
+    receiver: string[]
+    CC: string[]
     subject: string
     content: HTMLElement
     attachment: Attachment[]

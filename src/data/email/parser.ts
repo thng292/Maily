@@ -41,10 +41,10 @@ export function parseEmail(raw: RawEmail): Email {
         uidl: raw.uidl,
         replyTo: header["In-Reply-To"],
         sentTime: new Date(header["Date"]),
-        sender: header["From"],
+        sender: header["From"] ?? "Unknown sender",
         receiver: "To" in header ? header["To"].split(", ") : [],
         CC: "CC" in header ? header["CC"].split(", ") : [],
-        subject: header["Subject"] ?? null,
+        subject: header["Subject"] ?? "No Subject",
         attachment: [],
         read: raw.read,
     } as unknown as Email
@@ -53,6 +53,9 @@ export function parseEmail(raw: RawEmail): Email {
         const { subtype, boundary } = parseContentType(header["Content-Type"])
         const body = parseMultipartBody(rawbody.slice(1), boundary, subtype)
         res.content = body.content
+        if (!res.content) {
+            res.content = document.createElement("div")
+        }
         res.attachment = body.attachments
     } else {
         res.content = parsePlain(rawbody)
@@ -63,8 +66,9 @@ export function parseEmail(raw: RawEmail): Email {
 
 function parseHeader(raw: string[]) {
     const header: { [key: string]: string } = {}
-    let last = ''
+    let last = ""
     for (let line of raw) {
+        if (line.length == 0) break
         if (line.startsWith(" ")) {
             header[last] += line
         } else {
@@ -222,7 +226,7 @@ function parseOther(rawWithHeader: string[]): Attachment {
         mime: `${contentType.type}/${contentType.subtype}`,
         contentBase64: "",
     }
-    for (let i = 0; i < rawWithHeader.length; i++) {
+    for (let i = rawWithHeader.indexOf(""); i < rawWithHeader.length; i++) {
         res.contentBase64 += rawWithHeader[i].trim()
     }
     return res

@@ -319,15 +319,37 @@ export function findUIDL(uidl: string): Promise<boolean> {
     })
 }
 
-export function read(id: number): Promise<void> {
+export function read(uidl: string): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `UPDATE Inbox SET read = TRUE WHERE id = $id`,
+            sql: `UPDATE Inbox SET read = TRUE WHERE uidl = $id`,
             params: {
-                $id: id,
+                $id: uidl,
+            },
+        })
+        successCb[id] = () => {
+            console.log(id, sendEmail.name)
+            onSuccess()
+        }
+        // errorCb[id] = onError
+        errorCb[id] = (e) => {
+            console.log(id, read.name, e)
+            onError(e)
+        }
+    })
+}
+export function unread(uidl: string): Promise<void> {
+    return new Promise((onSuccess, onError) => {
+        const id = getQueryID()
+        dbWorker.postMessage({
+            id: id,
+            action: "exec",
+            sql: `UPDATE Inbox SET read = FALSE WHERE uidl = $id`,
+            params: {
+                $id: uidl,
             },
         })
         successCb[id] = () => {

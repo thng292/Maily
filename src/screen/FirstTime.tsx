@@ -1,11 +1,20 @@
 import { useTheme } from "@mui/material/styles"
 import DoneIcon from "@mui/icons-material/Done"
-import { TextField, Button, Stack, Alert, AlertTitle } from "@mui/material"
+import {
+    TextField,
+    Button,
+    Stack,
+    Alert,
+    AlertTitle,
+    IconButton,
+} from "@mui/material"
 import { useContext, useRef, useState } from "react"
 import { POP3Wrapper, SMTPWrapper } from "../socket"
 import Collapse from "@mui/material/Collapse"
 import { useNavigate } from "react-router-dom"
 import { ConfigContext } from "@/data/provider"
+import VisibilityIcon from "@mui/icons-material/Visibility"
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
 
 const variant = "standard"
 const defaultErr = {
@@ -24,6 +33,7 @@ function FirstTime() {
     const [inputState, setInputState] = useState<
         "good" | "normal" | "bad" | "loading"
     >("normal")
+    const [showPassword, togglePassword] = useState(false)
     const [errorState, setErrorState] = useState(defaultErr)
     const email = useRef<HTMLInputElement>(null)
     const password = useRef<HTMLInputElement>(null)
@@ -146,6 +156,7 @@ function FirstTime() {
                         placeholder="your@email.here"
                         label="Email"
                         inputRef={email}
+                        required
                         error={errorState.email}
                     ></TextField>
                     <TextField
@@ -153,14 +164,32 @@ function FirstTime() {
                         size="small"
                         placeholder="Password"
                         label="Password"
+                        type={showPassword ? "text" : "password"}
+                        required
                         inputRef={password}
                         error={errorState.password}
+                        InputProps={{
+                            endAdornment: (
+                                <IconButton
+                                    onClick={() =>
+                                        togglePassword((old) => !old)
+                                    }
+                                >
+                                    {showPassword ? (
+                                        <VisibilityOffIcon />
+                                    ) : (
+                                        <VisibilityIcon />
+                                    )}
+                                </IconButton>
+                            ),
+                        }}
                     />
                     <TextField
                         variant={variant}
                         size="small"
                         placeholder="SMTP server"
                         inputRef={server}
+                        required
                         label="SMTP server"
                         error={errorState.server}
                     />
@@ -171,6 +200,7 @@ function FirstTime() {
                             placeholder="SMTP port"
                             label="SMTP port"
                             type="number"
+                            required
                             error={errorState.smtpPort}
                             inputRef={smtpPort}
                         />
@@ -180,6 +210,7 @@ function FirstTime() {
                             placeholder="POP3 port"
                             label="POP3 port"
                             type="number"
+                            required
                             error={errorState.pop3Port}
                             inputRef={pop3Port}
                         />
@@ -237,9 +268,6 @@ function FirstTime() {
                         <Alert
                             severity="error"
                             className="min-w-80 max-w-md flex-1"
-                            onClose={() => {
-                                setErrorState((old) => ({ ...old, err: "" }))
-                            }}
                         >
                             <AlertTitle>Error</AlertTitle>
                             <strong>{errorState.err}</strong>
