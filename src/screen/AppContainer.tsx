@@ -8,6 +8,8 @@ import MailList from "@/components/MailList"
 import MailContent from "@/components/Mail"
 import { Button, Divider, Typography } from "@mui/joy"
 import { useTheme } from "@mui/joy/styles"
+import { Filter } from "@/data/config"
+import EditFilter from "@/components/EditFilter"
 
 export default function EmailContent() {
     const theme = useTheme()
@@ -17,7 +19,7 @@ export default function EmailContent() {
     const [selectedMail, setSelectedMail] = useState<Email | undefined>(
         undefined,
     )
-    console.log("From main", mailBox)
+    const [editFilter, toggleEditFilter] = useState<Filter>()
     if (!config.validated) {
         return (
             <Navigate
@@ -27,92 +29,107 @@ export default function EmailContent() {
         )
     }
     return (
-        <div
-            className="flex flex-row gap-2 overflow-hidden"
-            style={{
-                backgroundColor: theme.palette.background.surface,
-            }}
-        >
+        <>
             <div
-                className="basis-48 flex flex-col flex-shrink-0 p-2"
+                className="flex flex-row gap-2 overflow-hidden"
                 style={{
-                    height: "100dvh",
-                }}
-            >
-                <Navigation
-                    filter={Object.keys(mailBox.mailBox)}
-                    currentFilter={selectedFilter}
-                    setFilter={setSelectedFilter}
-                    deleteFilter={(name) => {
-                        const old = structuredClone(config)
-                        old.filters.splice(
-                            old.filters.findIndex((val) => val.name == name),
-                            1,
-                        )
-                        setConfig(old)
-                    }}
-                />
-            </div>
-            <Divider orientation="vertical"></Divider>
-            <div
-                className="overflow-x-hidden flex flex-col lg:flex-shrink-0 lg:basis-96 relative"
-                style={{
-                    height: "100dvh",
+                    backgroundColor: theme.palette.background.surface,
                 }}
             >
                 <div
-                    className="p-4 flex justify-between items-center sticky top-0 z-50"
+                    className="basis-48 flex flex-col flex-shrink-0 p-2"
                     style={{
-                        backgroundColor: theme.palette.background.surface,
+                        height: "100dvh",
                     }}
                 >
-                    <p className="font-semibold text-2xl pb-1">
-                        {selectedFilter}
-                    </p>
-
-                    <Button
-                        variant="solid"
-                        startDecorator={<CreateRoundedIcon />}
-                    >
-                        Compose
-                    </Button>
-                </div>
-                <MailList
-                    data={mailBox.mailBox[selectedFilter]}
-                    selected={selectedMail}
-                    onSelect={(mail) => {
-                        if (!mail.read) {
-                            dispatchMailBox({
-                                action: "Read",
-                                payload: mail.uidl,
-                            })
-                        }
-                        setSelectedMail(mail)
-                    }}
-                />
-            </div>
-            <div
-                className="flex flex-col flex-1 overflow-auto"
-                style={{
-                    height: "100dvh",
-                }}
-            >
-                <div className="flex-grow flex">
-                    <MailContent
-                        mail={selectedMail}
-                        replyMail={() => {}}
-                        deleteMail={() => {
-                            if (selectedMail) {
-                                dispatchMailBox({
-                                    action: "Delete",
-                                    payload: selectedMail.id,
-                                })
-                            }
+                    <Navigation
+                        filter={Object.keys(mailBox.mailBox)}
+                        currentFilter={selectedFilter}
+                        setFilter={setSelectedFilter}
+                        deleteFilter={(name) => {
+                            const old = structuredClone(config)
+                            old.filters.splice(
+                                old.filters.findIndex(
+                                    (val) => val.name == name,
+                                ),
+                                1,
+                            )
+                            setConfig(old)
                         }}
-                        forwardMail={() => {}}
+                        editFilter={(name) => {
+                            toggleEditFilter(
+                                config.filters.find((val) => val.name == name),
+                            )
+                        }}
                     />
                 </div>
+                <Divider orientation="vertical"></Divider>
+                <div
+                    className="overflow-x-hidden flex flex-col flex-grow lg:flex-grow-0 lg:flex-shrink-0 lg:basis-96 relative"
+                    style={{
+                        height: "100dvh",
+                    }}
+                >
+                    <div
+                        className="p-4 flex justify-between items-baseline sticky top-0 z-50"
+                        style={{
+                            backgroundColor: theme.palette.background.surface,
+                        }}
+                    >
+                        <p className="font-semibold text-2xl pb-1">
+                            {selectedFilter}
+                        </p>
+
+                        <Button
+                            variant="solid"
+                            startDecorator={<CreateRoundedIcon />}
+                        >
+                            Compose
+                        </Button>
+                    </div>
+                    <MailList
+                        data={mailBox.mailBox[selectedFilter]}
+                        selected={selectedMail}
+                        onSelect={(mail) => {
+                            if (!mail.read) {
+                                dispatchMailBox({
+                                    action: "Read",
+                                    payload: mail.uidl,
+                                })
+                            }
+                            setSelectedMail(mail)
+                        }}
+                    />
+                </div>
+                <div
+                    className="flex flex-col lg:flex-1 overflow-auto"
+                    style={{
+                        height: "100dvh",
+                    }}
+                >
+                    <div className="flex-grow flex">
+                        <MailContent
+                            mail={selectedMail}
+                            replyMail={() => {}}
+                            deleteMail={() => {
+                                if (selectedMail) {
+                                    dispatchMailBox({
+                                        action: "Delete",
+                                        payload: selectedMail.id,
+                                    })
+                                }
+                            }}
+                            forwardMail={() => {}}
+                        />
+                    </div>
+                </div>
             </div>
-        </div>
+            <EditFilter
+                open={!!editFilter}
+                onClose={() => toggleEditFilter(undefined)}
+                setFilter={setSelectedFilter}
+                filter={editFilter!}
+            />
+        </>
     )
 }

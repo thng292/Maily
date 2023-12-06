@@ -3,6 +3,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded"
 import InboxRoundedIcon from "@mui/icons-material/InboxRounded"
 import OutboxRoundedIcon from "@mui/icons-material/OutboxRounded"
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined"
+import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined"
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded"
 
 import {
@@ -15,19 +16,26 @@ import {
     ListItemDecorator,
     ListItemContent,
     Divider,
+    Dropdown,
+    Menu,
+    MenuButton,
+    MenuItem,
 } from "@mui/joy"
 import Settings from "./Setting"
 import AddFilter from "./AddFilter"
+import { MoreVert } from "@mui/icons-material"
 
 export default function Navigation({
     filter,
     setFilter,
     currentFilter,
     deleteFilter,
+    editFilter,
 }: {
     filter: string[]
     setFilter: React.Dispatch<React.SetStateAction<string>>
     deleteFilter: (filterName: string) => void
+    editFilter: (filterName: string) => void
     currentFilter: string
 }) {
     const [openSetting, toggleSettingModal] = useState(false)
@@ -42,7 +50,7 @@ export default function Navigation({
                     <ListSubheader
                         sx={{ letterSpacing: "2px", fontWeight: "800" }}
                     >
-                        Browse"
+                        Browse
                     </ListSubheader>
                     <List aria-labelledby="nav-list-browse">
                         <ListItem>
@@ -99,7 +107,7 @@ export default function Navigation({
                         {filter
                             .filter((val) => val != "Inbox" && val != "Sent")
                             .map((val) => (
-                                <ListItem>
+                                <ListItem key={val}>
                                     <ListItemButton
                                         selected={currentFilter == val}
                                         onClick={() => setFilter(val)}
@@ -117,15 +125,47 @@ export default function Navigation({
                                         <ListItemContent>{val}</ListItemContent>
                                         <div className="flex-1"></div>
                                         <ListItemDecorator>
-                                            <IconButton
-                                                size={"sm"}
-                                                color="danger"
-                                                onClick={() => {
-                                                    deleteFilter(val)
-                                                }}
-                                            >
-                                                <DeleteRoundedIcon />
-                                            </IconButton>
+                                            <Dropdown>
+                                                <MenuButton
+                                                    slots={{ root: IconButton }}
+                                                    slotProps={{
+                                                        root: {
+                                                            variant: "plain",
+                                                        },
+                                                    }}
+                                                >
+                                                    <MoreVert></MoreVert>
+                                                </MenuButton>
+                                                <Menu>
+                                                    <MenuItem
+                                                        onClick={() =>
+                                                            editFilter(val)
+                                                        }
+                                                    >
+                                                        <ListItemDecorator>
+                                                            <ModeEditOutlineOutlinedIcon />
+                                                        </ListItemDecorator>{" "}
+                                                        Edit
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        variant="soft"
+                                                        color="danger"
+                                                        onClick={() => {
+                                                            setFilter("Inbox")
+                                                            deleteFilter(val)
+                                                        }}
+                                                    >
+                                                        <ListItemDecorator
+                                                            sx={{
+                                                                color: "inherit",
+                                                            }}
+                                                        >
+                                                            <DeleteRoundedIcon />
+                                                        </ListItemDecorator>{" "}
+                                                        Delete
+                                                    </MenuItem>
+                                                </Menu>
+                                            </Dropdown>
                                         </ListItemDecorator>
                                     </ListItemButton>
                                 </ListItem>
@@ -144,6 +184,7 @@ export default function Navigation({
             <AddFilter
                 open={openFilter}
                 onClose={() => toggleFilterModal(false)}
+                setFilter={setFilter}
             ></AddFilter>
         </>
     )

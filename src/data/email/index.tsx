@@ -73,49 +73,64 @@ function useMailBoxReducer(config: Config) {
         sentPage: 1,
     })
 
-    const filterAndAdd = (
-        mails: Email[] | null,
-        sents: Email[] | null,
-        eraseOld: boolean,
-    ) => {
-        const old = structuredClone(mailBoxState.mailBox)
-        console.log("From filter and Add", config)
-        if (mails != null) {
-            if (eraseOld) {
-                for (let filter of config.filters) {
-                    old[filter.name] = []
+    const filterAndAdd = useCallback(
+        (
+            mails: Email[] | null,
+            sents: Email[] | null,
+            eraseOld: boolean,
+            config: Config,
+        ) => {
+            const old: FilteredMailBox = {}
+            console.log("From filter and Add", config)
+            if (mails != null) {
+                if (eraseOld) {
+                    for (let filter of config.filters) {
+                        old[filter.name] = []
+                    }
+                    old["Inbox"] = []
+                    old["Sent"] = []
+                } else {
+                    for (let filter of config.filters) {
+                        old[filter.name] = [
+                            ...mailBoxState.mailBox[filter.name],
+                        ]
+                    }
+                    old["Inbox"] = [...mailBoxState.mailBox["Inbox"]]
+                    old["Sent"] = [...mailBoxState.mailBox["Sent"]]
                 }
-                old["Inbox"] = []
-                old["Sent"] = []
-            }
-            for (let i = 0; i < mails.length; i++) {
-                let found = false
-                for (let filter of config.filters) {
-                    if (match(mails[i], filter)) {
-                        old[filter.name].push(mails[i])
-                        found = true
-                        break
+                for (let i = 0; i < mails.length; i++) {
+                    let found = false
+                    for (let filter of config.filters) {
+                        if (match(mails[i], filter)) {
+                            old[filter.name].push(mails[i])
+                            found = true
+                            break
+                        }
+                    }
+                    if (!found) {
+                        old["Inbox"].push(mails[i])
                     }
                 }
-                if (!found) {
-                    old["Inbox"].push(mails[i])
-                }
             }
-        }
-        if (sents != null) {
-            old["Sent"].push(...sents)
-        }
-        return old
-    }
+            if (sents != null) {
+                old["Sent"].push(...sents)
+            }
+            return old
+        },
+        [config],
+    )
 
-    function setFail(e: string) {
-        console.error(e)
-        setMailBoxState((old) => ({
-            ...old,
-            state: "failed",
-            error: e,
-        }))
-    }
+    const setFail = useCallback(
+        (e: string) => {
+            console.error(e)
+            setMailBoxState((old) => ({
+                ...old,
+                state: "failed",
+                error: e,
+            }))
+        },
+        [setMailBoxState],
+    )
 
     const mailBoxDispatch = useCallback(
         async (action: ActionType) => {
@@ -154,7 +169,7 @@ function useMailBoxReducer(config: Config) {
                                 }
                             }
                         } catch (e) {
-                            setFail(e as string)
+                            setFail(String(e))
                         }
                         POP3.destroy()
                         SaveDB()
@@ -212,17 +227,22 @@ function useMailBoxReducer(config: Config) {
                 case "Get":
                     try {
                         const rawMails = await getEmails(25, 0)
+                        console.info("ok")
                         const parsedMails = rawMails.map((rawMail) =>
                             parseEmail(rawMail),
                         )
+                        console.info("ok")
                         const sentMails = await getSentEmails(25, 0).then(
                             (data) => data.map((value) => parseEmail(value)),
                         )
+                        console.info("ok")
                         const newState = filterAndAdd(
                             parsedMails,
                             sentMails,
                             true,
+                            config,
                         )
+                        console.info("ok")
                         setMailBoxState((old) => ({
                             mailBox: newState,
                             state: "success",
@@ -231,7 +251,7 @@ function useMailBoxReducer(config: Config) {
                             sentPage: 1,
                         }))
                     } catch (e) {
-                        setFail(e as string)
+                        setFail(String(e))
                     }
                     break
                 case "More":
@@ -244,7 +264,12 @@ function useMailBoxReducer(config: Config) {
                             const parsed = parseEmail(rawMail)
                             return parsed
                         })
-                        const newState = filterAndAdd(parsedMails, null, false)
+                        const newState = filterAndAdd(
+                            parsedMails,
+                            null,
+                            false,
+                            config,
+                        )
                         setMailBoxState((old) => ({
                             mailBox: newState,
                             state: "success",
@@ -253,7 +278,7 @@ function useMailBoxReducer(config: Config) {
                             sentPage: 1,
                         }))
                     } catch (e) {
-                        setFail(e as string)
+                        setFail(String(e))
                     }
                     break
                 case "MoreSent":
@@ -266,7 +291,12 @@ function useMailBoxReducer(config: Config) {
                             const parsed = parseEmail(rawMail)
                             return parsed
                         })
-                        const newState = filterAndAdd(null, parsedMails, false)
+                        const newState = filterAndAdd(
+                            null,
+                            parsedMails,
+                            false,
+                            config,
+                        )
                         setMailBoxState((old) => ({
                             mailBox: newState,
                             state: "success",
@@ -275,14 +305,14 @@ function useMailBoxReducer(config: Config) {
                             sentPage: 1,
                         }))
                     } catch (e) {
-                        setFail(e as string)
+                        setFail(String(e))
                     }
                     break
                 case "Read":
                     try {
                         await read(action.payload)
                     } catch (e) {
-                        setFail(e as string)
+                        setFail(String(e))
                     }
                     mailBoxDispatch({ action: "Get" })
                     break
@@ -290,7 +320,7 @@ function useMailBoxReducer(config: Config) {
                     try {
                         await read(action.payload)
                     } catch (e) {
-                        setFail(e as string)
+                        setFail(String(e))
                     }
                     mailBoxDispatch({ action: "Get" })
                     break
@@ -326,21 +356,24 @@ function useMailBoxReducer(config: Config) {
 }
 
 function match(mail: Email, filter: Filter): boolean {
-    for (let str of filter.rule.mail) {
-        if (mail.sender.includes(str)) {
-            return true
+    if (filter.rule.mail.length)
+        for (let str of filter.rule.mail) {
+            if (mail.sender.includes(str)) {
+                return true
+            }
         }
-    }
-    for (let str of filter.rule.subject) {
-        if (mail.subject.includes(str)) {
-            return true
+    if (filter.rule.subject.length)
+        for (let str of filter.rule.subject) {
+            if (mail.subject.includes(str)) {
+                return true
+            }
         }
-    }
-    for (let str of filter.rule.content) {
-        if (mail.content.innerText.includes(str)) {
-            return true
+    if (filter.rule.content.length)
+        for (let str of filter.rule.content) {
+            if (mail.content.innerText.includes(str)) {
+                return true
+            }
         }
-    }
     return false
 }
 

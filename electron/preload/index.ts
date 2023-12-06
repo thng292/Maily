@@ -92,3 +92,23 @@ window.onmessage = (ev) => {
 }
 
 setTimeout(removeLoading, 4999)
+
+import { ipcRenderer, contextBridge } from "electron"
+
+declare global {
+    interface Window {
+        electronAPI: {
+            openSave: (fileName: string) => Promise<string | undefined>
+            openLoad: () => Promise<string[] | undefined>
+        }
+    }
+}
+
+window.electronAPI = {
+    openSave: (fileName: string) => {
+        return ipcRenderer.invoke("openSave", fileName)
+    },
+    openLoad: () => {
+        return ipcRenderer.invoke("openLoad")
+    },
+}

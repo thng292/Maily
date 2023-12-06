@@ -16,14 +16,16 @@ import {
     FormHelperText,
     Stack,
 } from "@mui/joy"
-import { AddRounded } from "@mui/icons-material"
+import { Filter } from "@/data/config"
 
 export default function AddFilter({
     open,
     onClose,
+    filter,
     setFilter,
 }: {
     open: boolean
+    filter?: Filter
     setFilter: (name: string) => void
     onClose: () => void
 }) {
@@ -31,9 +33,21 @@ export default function AddFilter({
     const sender = useRef<HTMLInputElement>(null)
     const subject = useRef<HTMLInputElement>(null)
     const content = useRef<HTMLInputElement>(null)
-    const [filterName, setFilterName] = useState<string>("")
+    const [filterName, setFilterName] = useState<string>(filter?.name ?? "")
     const [focus, setFocus] = useState<0 | 1 | 2 | 3>(0)
     const [error, setError] = useState(false)
+
+    useEffect(() => {
+        if (sender.current && subject.current && content.current) {
+            sender.current.value = filter?.rule.mail.join(", ") ?? ""
+            subject.current.value = filter?.rule.subject.join(", ") ?? ""
+            content.current.value = filter?.rule.content.join(", ") ?? ""
+        }
+    }, [filter, sender.current, subject.current, content.current])
+
+    useEffect(() => {
+        setFilterName(filter?.name ?? "")
+    }, [filter])
 
     useEffect(() => {
         const tmp = setTimeout(() => {
@@ -62,8 +76,8 @@ export default function AddFilter({
                 role="alertdialog"
             >
                 <DialogTitle>
-                    <AddRounded />
-                    Add Filter
+                    <ModeEditOutlineOutlinedIcon />
+                    Edit Filter
                 </DialogTitle>
                 <Divider inset="none" />
                 <DialogContent>
@@ -135,7 +149,11 @@ export default function AddFilter({
                         onClick={(e) => {
                             e.preventDefault()
                             const old = structuredClone(config)
-                            old.filters.push({
+                            ;(old.filters[
+                                old.filters.findIndex(
+                                    (val) => val.name == filter?.name,
+                                )
+                            ] = {
                                 name: filterName,
                                 rule: {
                                     mail: (sender.current?.value ?? "")
@@ -151,8 +169,8 @@ export default function AddFilter({
                                         .map((val) => val.trim())
                                         .filter((val) => val.length),
                                 },
-                            })
-                            updateConfig(old)
+                            }),
+                                updateConfig(old)
                             setFilter(filterName)
                             onClose()
                         }}

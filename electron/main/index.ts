@@ -1,6 +1,7 @@
-import { app, BrowserWindow, shell, ipcMain } from "electron"
+import { app, BrowserWindow, shell, ipcMain, dialog } from "electron"
 import { release } from "node:os"
 import { join } from "node:path"
+import fs from "node:fs"
 
 // The built directory structure
 //
@@ -77,6 +78,43 @@ async function createWindow() {
         if (url.startsWith("https:")) shell.openExternal(url)
         return { action: "deny" }
     })
+
+    // New window example arg: new windows url
+    ipcMain.handle("open-win", (_, arg) => {
+        const childWindow = new BrowserWindow({
+            webPreferences: {
+                preload,
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+        })
+
+        if (process.env.VITE_DEV_SERVER_URL) {
+            childWindow.loadURL(`${url}#${arg}`)
+        } else {
+            childWindow.loadFile(indexHtml, { hash: arg })
+        }
+    })
+
+    ipcMain.handle("openSave", (e, args) => {
+        let path = ""
+        try {
+            path = join(app.getPath("recent"), args)
+        } catch (e) {
+            console.error(e)
+            path = join(app.getPath("home"), args)
+        }
+        return dialog.showSaveDialogSync({
+            defaultPath: path,
+            properties: ["createDirectory", "showOverwriteConfirmation"],
+        })
+    })
+
+    ipcMain.handle("openLoad", (e, args) => {
+        return dialog.showOpenDialogSync({
+            properties: ["multiSelections", "openFile"],
+        })
+    })
 }
 
 app.whenReady().then(createWindow)
@@ -100,22 +138,5 @@ app.on("activate", () => {
         allWindows[0].focus()
     } else {
         createWindow()
-    }
-})
-
-// New window example arg: new windows url
-ipcMain.handle("open-win", (_, arg) => {
-    const childWindow = new BrowserWindow({
-        webPreferences: {
-            preload,
-            nodeIntegration: true,
-            contextIsolation: false,
-        },
-    })
-
-    if (process.env.VITE_DEV_SERVER_URL) {
-        childWindow.loadURL(`${url}#${arg}`)
-    } else {
-        childWindow.loadFile(indexHtml, { hash: arg })
     }
 })

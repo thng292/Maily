@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto"
 import { Attachment } from "./types"
 
 export class MailBuilder {
@@ -65,7 +64,11 @@ export class MailBuilder {
 
     toString(): string {
         const messageID =
-            "Message-ID: <" + randomUUID() + "@" + this.#sender + ">"
+            "Message-ID: <" +
+            window.crypto.randomUUID() +
+            "@" +
+            this.#sender +
+            ">"
         const date = "Date: " + new Date().toUTCString()
         const MIME_V = "MIME-Version: 1.0"
         const from = this.#sender.length ? `From: <${this.#sender}>` : null
@@ -85,8 +88,8 @@ export class MailBuilder {
             tmp.appendChild(body)
             textContent =
                 "<!DOCTYPE html>\r\n<html>\r\n" +
-                tmp.innerHTML.replaceAll('\n','\r\n')
-                "\r\n</html>\r\n\r\n"
+                tmp.innerHTML.replaceAll("\n", "\r\n")
+            ;("\r\n</html>\r\n\r\n")
         } else {
             this.#content = document.createElement("p")
             textContent = ""

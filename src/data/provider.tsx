@@ -21,6 +21,7 @@ export const MailBoxContext = createContext<
 
 export function DataProvider({ children }: { children: ReactNode }) {
     const config = useConfig()
+    console.log(config[0])
     const mailBox = useMailBoxReducer(config[0])
     return (
         <ConfigContext.Provider value={config}>

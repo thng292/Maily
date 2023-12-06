@@ -11,8 +11,10 @@ import Tooltip from "@mui/joy/Tooltip"
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded"
 import ForwardToInboxRoundedIcon from "@mui/icons-material/ForwardToInboxRounded"
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded"
-import { Email } from "@/data/email"
+import { Attachment, Email } from "@/data/email"
 import AttachmentIcon from "@mui/icons-material/Attachment"
+import { CardContent, CardCover } from "@mui/joy"
+import fs from "node:fs"
 
 export default function EmailContent({
     mail,
@@ -190,83 +192,12 @@ export default function EmailContent({
                     className="h-fit"
                 ></div>
                 <Divider />
-                {mail.attachment.length > 0 && (
-                    <>
-                        <Typography
-                            level="title-sm"
-                            mt={2}
-                            mb={2}
-                        >
-                            Attachments
-                        </Typography>
-                        <Box
-                            sx={(theme) => ({
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: 2,
-                                "& > div": {
-                                    boxShadow: "none",
-                                    "--Card-padding": "0px",
-                                    "--Card-radius": theme.vars.radius.sm,
-                                },
-                            })}
-                        >
-                            {mail.attachment.map((attch) => {
-                                if (attch.mime.startsWith("image/")) {
-                                    return (
-                                        <Card variant="outlined">
-                                            <AspectRatio
-                                                ratio="1"
-                                                sx={{ minWidth: 80 }}
-                                            >
-                                                <img
-                                                    src={`data:${attch.mime};base64, ${attch.contentBase64}`}
-                                                    alt={attch.filename}
-                                                />
-                                            </AspectRatio>
-                                        </Card>
-                                    )
-                                } else {
-                                    return (
-                                        <Card
-                                            variant="outlined"
-                                            orientation="horizontal"
-                                        >
-                                            <CardOverflow>
-                                                <AspectRatio
-                                                    ratio="1"
-                                                    sx={{ minWidth: 80 }}
-                                                >
-                                                    <div>
-                                                        <AttachmentIcon />
-                                                    </div>
-                                                </AspectRatio>
-                                            </CardOverflow>
-                                            <Box
-                                                sx={{
-                                                    py: { xs: 1, sm: 2 },
-                                                    pr: 2,
-                                                }}
-                                            >
-                                                <Typography
-                                                    level="title-sm"
-                                                    color="primary"
-                                                >
-                                                    {attch.filename}
-                                                </Typography>
-                                            </Box>
-                                        </Card>
-                                    )
-                                }
-                            })}
-                        </Box>
-                    </>
-                )}
+                <RenderAttachment attachments={mail.attachment} />
             </Sheet>
         )
     } else {
         return (
-            <div className="lg:flex hidden items-center justify-center flex-col flex-grow">
+            <div className="lg:flex hidden items-center justify-center flex-col flex-grow gap-4">
                 <img
                     src="./icon.png"
                     width={200}
@@ -277,4 +208,156 @@ export default function EmailContent({
             </div>
         )
     }
+}
+
+function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
+    if (attachments.length > 0)
+        return (
+            <>
+                <Typography
+                    level="title-sm"
+                    mt={2}
+                    mb={2}
+                >
+                    Attachments
+                </Typography>
+                <Box
+                    sx={(theme) => ({
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 2,
+                        "& > div": {
+                            boxShadow: "none",
+                            "--Card-padding": "0px",
+                            "--Card-radius": theme.vars.radius.sm,
+                        },
+                    })}
+                >
+                    {attachments.map((attch) => {
+                        if (attch.mime.startsWith("image/")) {
+                            return (
+                                <Card
+                                    key={attch.filename}
+                                    slotProps={{
+                                        root: {
+                                            onClick: () => {
+                                                writeFile(
+                                                    attch.filename,
+                                                    attch.contentBase64,
+                                                )
+                                            },
+                                        },
+                                    }}
+                                    variant="outlined"
+                                    sx={{
+                                        minWidth: 120,
+                                        aspectRatio: 1,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    <CardCover>
+                                        <img
+                                            src={`data:${attch.mime};base64, ${attch.contentBase64}`}
+                                            alt={attch.filename}
+                                        />
+                                    </CardCover>
+                                    <CardCover
+                                        sx={{
+                                            background:
+                                                "linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0) 60%), linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0) 70%)",
+                                        }}
+                                    />
+                                    <CardContent
+                                        sx={{
+                                            justifyContent: "flex-end",
+                                            p: 2,
+                                        }}
+                                    >
+                                        <Typography
+                                            level="title-md"
+                                            textColor="#fff"
+                                        >
+                                            {attch.filename}
+                                        </Typography>
+                                        <Typography
+                                            level="body-sm"
+                                            textColor="neutral.300"
+                                        >
+                                            {(
+                                                ((attch.contentBase64.length /
+                                                    4) *
+                                                    3) /
+                                                1024
+                                            ).toPrecision(2)}{" "}
+                                            KB
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            )
+                        } else {
+                            return (
+                                <Card
+                                    key={attch.filename}
+                                    variant="outlined"
+                                    orientation="horizontal"
+                                    slotProps={{
+                                        root: {
+                                            onClick: () => {
+                                                writeFile(
+                                                    attch.filename,
+                                                    attch.contentBase64,
+                                                )
+                                            },
+                                        },
+                                    }}
+                                >
+                                    <CardOverflow>
+                                        <AspectRatio
+                                            ratio="1"
+                                            sx={{ minWidth: 120 }}
+                                        >
+                                            <div>
+                                                <AttachmentIcon />
+                                            </div>
+                                        </AspectRatio>
+                                    </CardOverflow>
+                                    <Box
+                                        sx={{
+                                            py: { xs: 1, sm: 2 },
+                                            pr: 2,
+                                        }}
+                                    >
+                                        <Typography
+                                            level="title-sm"
+                                            color="primary"
+                                        >
+                                            {attch.filename}
+                                        </Typography>
+                                    </Box>
+                                </Card>
+                            )
+                        }
+                    })}
+                </Box>
+            </>
+        )
+    else {
+        return <></>
+    }
+}
+
+function writeFile(fileName: string, base64: string) {
+    var binaryString = atob(base64)
+    var bytes = new Uint8Array(binaryString.length)
+    for (var i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+    }
+    window.electronAPI
+        .openSave(fileName)
+        .then((path) => {
+            if (path) {
+                fs.writeFile(path, bytes, () => {})
+            }
+        })
+        .catch(console.error)
 }
