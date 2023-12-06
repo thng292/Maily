@@ -160,8 +160,8 @@ export function deleteEmail(emailID: number): Promise<void> {
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `DELETE FROM TABLE Inbox WHERE id = $id;
-                  UPDATE Inbox SET id = id - 1 WHERE id > $id`,
+            sql: `DELETE FROM Inbox WHERE id = $id;
+                  UPDATE Inbox SET id = id - 1 WHERE id > $id;`,
             params: {
                 $id: emailID,
             },
@@ -183,7 +183,7 @@ export function deleteSentEmail(emailIDs: number[]): Promise<void> {
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `DELETE FROM TABLE Sent WHERE id IN (${emailIDs.join(",")})`,
+            sql: `DELETE FROM Sent WHERE id IN (${emailIDs.join(",")})`,
         })
         successCb[id] = () => {
             console.log(id, sendEmail.name)

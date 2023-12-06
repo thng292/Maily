@@ -30,10 +30,6 @@ export function parseEmail(raw: RawEmail): Email {
         rawbody = lines
     }
 
-    console.log(parseEmail.name, raw.uidl, "Raw", lines)
-    console.log(parseEmail.name, raw.uidl, "Raw Header", rawheader)
-    console.log(parseEmail.name, raw.uidl, "Raw Body", rawbody)
-
     const header = parseHeader(rawheader)
     let res = {
         id: raw.id,
