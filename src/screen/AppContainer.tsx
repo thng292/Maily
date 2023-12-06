@@ -1,32 +1,23 @@
 import { useContext, useState } from "react"
-import { ConfigContext, MailBoxContext } from "@/data/provider"
+import CreateRoundedIcon from "@mui/icons-material/CreateRounded"
 import { Navigate } from "react-router-dom"
-import {
-    Button,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    useMediaQuery,
-} from "@mui/material"
-import InboxIcon from "@mui/icons-material/Inbox"
-import SendIcon from "@mui/icons-material/Send"
-import AddIcon from "@mui/icons-material/Add"
-import FolderOpenIcon from "@mui/icons-material/FolderOpen"
-import { useTheme } from "@mui/material/styles"
 import { Email } from "@/data/email"
-import { DisplayMail } from "../components/DisplayMail"
-import { DisplayMailList } from "../components/DisplayMailList"
+import { ConfigContext, MailBoxContext } from "@/data/provider"
+import Navigation from "@/components/Navigation"
+import MailList from "@/components/MailList"
+import MailContent from "@/components/Mail"
+import { Button, Divider, Typography } from "@mui/joy"
+import { useTheme } from "@mui/joy/styles"
 
-const AppContainer = () => {
+export default function EmailContent() {
     const theme = useTheme()
-    const largeScreen = useMediaQuery("(min-width: 1280px)")
-    console.log(largeScreen)
     const [config, setConfig] = useContext(ConfigContext)
     const [mailBox, dispatchMailBox] = useContext(MailBoxContext)
     const [selectedFilter, setSelectedFilter] = useState("Inbox")
-    const [selectedMail, setSelectedMail] = useState<Email | null>(null)
+    const [selectedMail, setSelectedMail] = useState<Email | undefined>(
+        undefined,
+    )
+    console.log("From main", mailBox)
     if (!config.validated) {
         return (
             <Navigate
@@ -36,89 +27,92 @@ const AppContainer = () => {
         )
     }
     return (
-        <div className="flex flex-row overflow-hidden">
+        <div
+            className="flex flex-row gap-2 overflow-hidden"
+            style={{
+                backgroundColor: theme.palette.background.surface,
+            }}
+        >
             <div
-                className="basis-48 flex flex-col flex-shrink-0"
+                className="basis-48 flex flex-col flex-shrink-0 p-2"
                 style={{
                     height: "100dvh",
                 }}
             >
-                <List dense>
-                    <ListItem>
-                        <Button
-                            onClick={() => setSelectedFilter("")}
-                            endIcon={<AddIcon />}
-                            variant="outlined"
-                        >
-                            Compose
-                        </Button>
-                    </ListItem>
-
-                    <ListItemButton
-                        selected={
-                            selectedFilter == "Inbox" || selectedFilter == ""
-                        }
-                        onClick={() => setSelectedFilter("Inbox")}
-                    >
-                        <ListItemIcon>
-                            <InboxIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={"Inbox"} />
-                    </ListItemButton>
-                    <ListItemButton
-                        selected={selectedFilter == "Sent"}
-                        onClick={() => setSelectedFilter("Sent")}
-                    >
-                        <ListItemIcon>
-                            <SendIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={"Sent"} />
-                    </ListItemButton>
-                </List>
-                <List>
-                    <ListItem>
-                        <Button
-                            endIcon={<AddIcon />}
-                            onClick={() => {}}
-                            variant="outlined"
-                        >
-                            Add Filter
-                        </Button>
-                    </ListItem>
-
-                    {Object.keys(mailBox.mailBox)
-                        .filter((val) => val != "Inbox" && val != "Sent")
-                        .map((val) => (
-                            <ListItemButton
-                                id={val}
-                                selected={selectedFilter == val}
-                                onClick={() => setSelectedFilter(val)}
-                            >
-                                <ListItemIcon>
-                                    <FolderOpenIcon></FolderOpenIcon>
-                                </ListItemIcon>
-                                <ListItemText primary={val} />
-                            </ListItemButton>
-                        ))}
-                </List>
+                <Navigation
+                    filter={Object.keys(mailBox.mailBox)}
+                    currentFilter={selectedFilter}
+                    setFilter={setSelectedFilter}
+                    deleteFilter={(name) => {
+                        const old = structuredClone(config)
+                        old.filters.splice(
+                            old.filters.findIndex((val) => val.name == name),
+                            1,
+                        )
+                        setConfig(old)
+                    }}
+                />
             </div>
-            <DisplayMailList
-                mailList={
-                    mailBox.mailBox[
-                        selectedFilter.length ? selectedFilter : "Inbox"
-                    ]
-                }
-                largeScreen={largeScreen}
-                setSelectedMail={setSelectedMail}
-                display={largeScreen || !selectedMail}
-            />
+            <Divider orientation="vertical"></Divider>
+            <div
+                className="overflow-x-hidden flex flex-col lg:flex-shrink-0 lg:basis-96 relative"
+                style={{
+                    height: "100dvh",
+                }}
+            >
+                <div
+                    className="p-4 flex justify-between items-center sticky top-0 z-50"
+                    style={{
+                        backgroundColor: theme.palette.background.surface,
+                    }}
+                >
+                    <p className="font-semibold text-2xl pb-1">
+                        {selectedFilter}
+                    </p>
 
-            <DisplayMail
-                mail={selectedMail}
-                close={() => setSelectedMail(null)}
-            />
+                    <Button
+                        variant="solid"
+                        startDecorator={<CreateRoundedIcon />}
+                    >
+                        Compose
+                    </Button>
+                </div>
+                <MailList
+                    data={mailBox.mailBox[selectedFilter]}
+                    selected={selectedMail}
+                    onSelect={(mail) => {
+                        if (!mail.read) {
+                            dispatchMailBox({
+                                action: "Read",
+                                payload: mail.uidl,
+                            })
+                        }
+                        setSelectedMail(mail)
+                    }}
+                />
+            </div>
+            <div
+                className="flex flex-col flex-1 overflow-auto"
+                style={{
+                    height: "100dvh",
+                }}
+            >
+                <div className="flex-grow flex">
+                    <MailContent
+                        mail={selectedMail}
+                        replyMail={() => {}}
+                        deleteMail={() => {
+                            if (selectedMail) {
+                                dispatchMailBox({
+                                    action: "Delete",
+                                    payload: selectedMail.id,
+                                })
+                            }
+                        }}
+                        forwardMail={() => {}}
+                    />
+                </div>
+            </div>
         </div>
     )
 }
-
-export default AppContainer

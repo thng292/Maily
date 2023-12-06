@@ -154,13 +154,17 @@ export function sendEmail(content: string): Promise<void> {
     })
 }
 
-export function deleteEmail(emailIDs: number[]): Promise<void> {
+export function deleteEmail(emailID: number): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `DELETE FROM TABLE Inbox WHERE id IN (${emailIDs.join(",")})`,
+            sql: `DELETE FROM TABLE Inbox WHERE id = $id;
+                  UPDATE Inbox SET id = id - 1 WHERE id > $id`,
+            params: {
+                $id: emailID,
+            },
         })
         successCb[id] = () => {
             console.log(id, sendEmail.name)

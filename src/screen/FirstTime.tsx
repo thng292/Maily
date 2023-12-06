@@ -1,22 +1,23 @@
-import { useTheme } from "@mui/material/styles"
 import DoneIcon from "@mui/icons-material/Done"
-import {
-    TextField,
-    Button,
-    Stack,
-    Alert,
-    AlertTitle,
-    IconButton,
-} from "@mui/material"
-import { useContext, useRef, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import { POP3Wrapper, SMTPWrapper } from "../socket"
-import Collapse from "@mui/material/Collapse"
 import { useNavigate } from "react-router-dom"
 import { ConfigContext } from "@/data/provider"
 import VisibilityIcon from "@mui/icons-material/Visibility"
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
+import { useTheme } from "@mui/joy/styles"
+import {
+    Stack,
+    FormControl,
+    FormLabel,
+    Button,
+    Input,
+    Card,
+    CircularProgress,
+    IconButton,
+    Alert,
+} from "@mui/joy"
 
-const variant = "standard"
 const defaultErr = {
     email: false,
     password: false,
@@ -87,7 +88,6 @@ function FirstTime() {
                 return
             }
         }
-        console.log("Checking SMTP")
         if (server.current && smtpPort.current) {
             const SMTP = new SMTPWrapper()
             const smtpP = Number(smtpPort.current.value)
@@ -110,6 +110,24 @@ function FirstTime() {
         }
     }
 
+    useEffect(() => {
+        if (inputState == "good") {
+            updateConfig({
+                ...config,
+                validated: true,
+                username: email.current!.value,
+                password: password.current!.value,
+                server: server.current!.value,
+                SMTPport: Number(smtpPort.current!.value),
+                POP3port: Number(pop3Port.current!.value),
+            })
+            navigate("/", {
+                replace: true,
+                relative: "route",
+            })
+        }
+    }, [inputState])
+
     return (
         <div
             className="flex flex-col justify-center items-center"
@@ -118,162 +136,169 @@ function FirstTime() {
                 height: "100dvh",
             }}
         >
-            {/* <img
-                src={bg}
-                style={{
-                    width: "100dvw",
-                    height: "100dvh",
-                    position: "fixed",
-                    zIndex: -1,
-                }}
-            /> */}
-            <div
-                className="border-2 border-solid rounded-md p-8 min-w-80 max-w-md w-1/2"
-                style={{
-                    backgroundColor: theme.palette.background.paper,
-                    borderColor: theme.palette.primary.main,
-                }}
-            >
-                <Stack spacing={2}>
-                    <div className="py-4 flex flex-col gap-2">
-                        <p
-                            className="font-semibold text-4xl"
-                            style={{ color: theme.palette.text.primary }}
-                        >
-                            First time?
-                        </p>
-                        <p
-                            className="font-normal"
-                            style={{ color: theme.palette.text.primary }}
-                        >
-                            We need some infomation to set the stuff up.
-                        </p>
-                    </div>
-
-                    <TextField
-                        variant={variant}
-                        size="small"
-                        placeholder="your@email.here"
-                        label="Email"
-                        inputRef={email}
-                        required
-                        error={errorState.email}
-                    ></TextField>
-                    <TextField
-                        variant={variant}
-                        size="small"
-                        placeholder="Password"
-                        label="Password"
-                        type={showPassword ? "text" : "password"}
-                        required
-                        inputRef={password}
-                        error={errorState.password}
-                        InputProps={{
-                            endAdornment: (
-                                <IconButton
-                                    onClick={() =>
-                                        togglePassword((old) => !old)
-                                    }
-                                >
-                                    {showPassword ? (
-                                        <VisibilityOffIcon />
-                                    ) : (
-                                        <VisibilityIcon />
-                                    )}
-                                </IconButton>
-                            ),
-                        }}
-                    />
-                    <TextField
-                        variant={variant}
-                        size="small"
-                        placeholder="SMTP server"
-                        inputRef={server}
-                        required
-                        label="SMTP server"
-                        error={errorState.server}
-                    />
-                    <div className="flex gap-2">
-                        <TextField
-                            variant={variant}
-                            size="small"
-                            placeholder="SMTP port"
-                            label="SMTP port"
-                            type="number"
-                            required
-                            error={errorState.smtpPort}
-                            inputRef={smtpPort}
-                        />
-                        <TextField
-                            variant={variant}
-                            size="small"
-                            placeholder="POP3 port"
-                            label="POP3 port"
-                            type="number"
-                            required
-                            error={errorState.pop3Port}
-                            inputRef={pop3Port}
-                        />
-                    </div>
-                    <div className="flex justify-end gap-2 items-center">
-                        <div
-                            style={{
-                                display:
-                                    inputState == "good" ? "block" : "none",
-                            }}
-                        >
-                            <DoneIcon />
-                        </div>
-                        {inputState == "loading" && (
-                            <div
-                                className="animate-spin border-t-black border-transparent border-solid w-8 h-8"
-                                style={{
-                                    borderRadius: "50%",
-                                }}
-                            ></div>
-                        )}
-                        <Button
-                            variant={"contained"}
-                            onClick={CheckInput}
-                        >
-                            Test
-                        </Button>
-                        <Button
-                            variant={"contained"}
-                            disabled={inputState != "good"}
-                            onClick={() => {
-                                updateConfig({
-                                    ...config,
-                                    validated: true,
-                                    username: email.current!.value,
-                                    password: password.current!.value,
-                                    server: server.current!.value,
-                                    SMTPport: Number(smtpPort.current!.value),
-                                    POP3port: Number(pop3Port.current!.value),
-                                })
-                                navigate("/", {
-                                    replace: true,
-                                    relative: "route",
-                                })
-                            }}
-                        >
-                            OK
-                        </Button>
-                    </div>
-                    <Collapse
-                        orientation="vertical"
-                        in={!!errorState.err.length}
-                        collapsedSize={0}
+            <div className="min-w-min max-w-md w-1/3">
+                <Card size="lg">
+                    <Stack
+                        gap={4}
+                        sx={{ mt: 2 }}
                     >
-                        <Alert
-                            severity="error"
-                            className="min-w-80 max-w-md flex-1"
+                        <div className="py-4 flex flex-col gap-2">
+                            <p
+                                className="font-semibold text-4xl"
+                                style={{ color: theme.palette.text.primary }}
+                            >
+                                First time?
+                            </p>
+                            <p
+                                className="font-normal"
+                                style={{ color: theme.palette.text.primary }}
+                            >
+                                We need some infomation to set the stuff up.
+                            </p>
+                        </div>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault()
+                                CheckInput()
+                            }}
                         >
-                            <AlertTitle>Error</AlertTitle>
-                            <strong>{errorState.err}</strong>
-                        </Alert>
-                    </Collapse>
-                </Stack>
+                            <FormControl
+                                error={errorState.email}
+                                required
+                            >
+                                <FormLabel>Email</FormLabel>
+                                <Input
+                                    slotProps={{
+                                        input: {
+                                            ref: email,
+                                        },
+                                    }}
+                                    type="email"
+                                    name="email"
+                                    placeholder="your@email.here"
+                                    defaultValue={config.username}
+                                />
+                            </FormControl>
+                            <FormControl
+                                error={errorState.password}
+                                required
+                            >
+                                <FormLabel>Password</FormLabel>
+                                <Input
+                                    slotProps={{
+                                        input: {
+                                            ref: password,
+                                        },
+                                    }}
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    defaultValue={config.password}
+                                    placeholder="password"
+                                    endDecorator={
+                                        <IconButton
+                                            onClick={() =>
+                                                togglePassword((old) => !old)
+                                            }
+                                        >
+                                            {showPassword ? (
+                                                <VisibilityOffIcon />
+                                            ) : (
+                                                <VisibilityIcon />
+                                            )}
+                                        </IconButton>
+                                    }
+                                />
+                            </FormControl>
+                            <FormControl
+                                error={errorState.server}
+                                required
+                            >
+                                <FormLabel>Server</FormLabel>
+                                <Input
+                                    slotProps={{
+                                        input: {
+                                            ref: server,
+                                        },
+                                    }}
+                                    type="text"
+                                    name="server"
+                                    defaultValue={config.server}
+                                    placeholder="Server"
+                                />
+                            </FormControl>
+                            <div className="grid grid-cols-2 grid-row-1 gap-2">
+                                <FormControl
+                                    error={errorState.pop3Port}
+                                    required
+                                >
+                                    <FormLabel>POP3 Port</FormLabel>
+                                    <Input
+                                        slotProps={{
+                                            input: {
+                                                ref: pop3Port,
+                                            },
+                                        }}
+                                        type="number"
+                                        defaultValue={config.POP3port}
+                                        name="pop3port"
+                                    />
+                                </FormControl>
+                                <FormControl
+                                    error={errorState.smtpPort}
+                                    required
+                                >
+                                    <FormLabel>SMTP Port</FormLabel>
+                                    <Input
+                                        slotProps={{
+                                            input: {
+                                                ref: smtpPort,
+                                            },
+                                        }}
+                                        type="number"
+                                        defaultValue={config.SMTPport}
+                                        name="smtpport"
+                                    />
+                                </FormControl>
+                            </div>
+
+                            <Stack
+                                gap={4}
+                                sx={{ mt: 2 }}
+                            >
+                                {!!errorState.err.length && (
+                                    <Alert>
+                                        <strong>{errorState.err}</strong>
+                                    </Alert>
+                                )}
+                                <Button
+                                    type="submit"
+                                    color={(() => {
+                                        switch (inputState) {
+                                            case "good":
+                                                return "success"
+                                            case "normal":
+                                                return "primary"
+                                            case "bad":
+                                                return "danger"
+                                            case "loading":
+                                                return "primary"
+                                        }
+                                    })()}
+                                    fullWidth
+                                >
+                                    {inputState == "loading" ? (
+                                        <CircularProgress
+                                            size="sm"
+                                            variant="soft"
+                                        />
+                                    ) : (
+                                        "Check"
+                                    )}
+                                </Button>
+                            </Stack>
+                        </form>
+                    </Stack>
+                </Card>
             </div>
         </div>
     )

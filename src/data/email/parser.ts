@@ -30,9 +30,9 @@ export function parseEmail(raw: RawEmail): Email {
         rawbody = lines
     }
 
-    // console.log(parseEmail.name, raw.uidl, "Raw", lines)
-    // console.log(parseEmail.name, raw.uidl, "Raw Header", rawheader)
-    // console.log(parseEmail.name, raw.uidl, "Raw Body", rawbody)
+    console.log(parseEmail.name, raw.uidl, "Raw", lines)
+    console.log(parseEmail.name, raw.uidl, "Raw Header", rawheader)
+    console.log(parseEmail.name, raw.uidl, "Raw Body", rawbody)
 
     const header = parseHeader(rawheader)
     let res = {
@@ -213,7 +213,8 @@ function parseHTML(rawBody: string[]): HTMLElement {
 
 function parsePlain(rawBody: string[]): HTMLElement {
     const content = document.createElement("p")
-    content.innerText = rawBody.join("")
+    content.style.fontFamily = "monospace"
+    content.innerText = rawBody.join("\n")
     return content
 }
 

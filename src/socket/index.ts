@@ -163,7 +163,7 @@ class POP3Wrapper {
             this.socket.once("data", (data) => {
                 const tmp = data.toString()
                 if (tmp.startsWith("+OK")) {
-                    onRes(tmp.slice(tmp.indexOf("\r\n")))
+                    onRes(tmp.slice(tmp.indexOf("\r\n")).replace("\n.\n", ""))
                 }
                 if (data.toString().startsWith("-ERR")) {
                     onErr(

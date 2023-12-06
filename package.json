@@ -23,10 +23,10 @@
     "@electron/rebuild": "^3.3.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@fontsource/roboto": "^5.0.8",
+    "@fontsource/inter": "^5.0.15",
     "@lexical/react": "^0.12.2",
     "@mui/icons-material": "^5.14.18",
-    "@mui/material": "^5.14.18",
+    "@mui/joy": "^5.0.0-beta.16",
     "lexical": "^0.12.2",
     "react-router-dom": "^6.20.1",
     "sql.js": "^1.8.0"

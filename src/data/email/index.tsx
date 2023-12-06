@@ -49,7 +49,7 @@ type ActionType =
       }
     | {
           action: "Delete"
-          payload: number[]
+          payload: number
       }
     | {
           action: "Refesh"
@@ -73,13 +73,13 @@ function useMailBoxReducer(config: Config) {
         sentPage: 1,
     })
 
-    function filterAndAdd(
+    const filterAndAdd = (
         mails: Email[] | null,
         sents: Email[] | null,
         eraseOld: boolean,
-    ) {
+    ) => {
         const old = structuredClone(mailBoxState.mailBox)
-        console.log(old)
+        console.log("From filter and Add", config)
         if (mails != null) {
             if (eraseOld) {
                 for (let filter of config.filters) {
@@ -88,7 +88,6 @@ function useMailBoxReducer(config: Config) {
                 old["Inbox"] = []
                 old["Sent"] = []
             }
-            console.log(old)
             for (let i = 0; i < mails.length; i++) {
                 let found = false
                 for (let filter of config.filters) {
@@ -191,12 +190,10 @@ function useMailBoxReducer(config: Config) {
                         await POP3.connect(config.server, config.POP3port)
                         await POP3.USER(config.username)
                         await POP3.PASS(config.password)
-                        for (let item of action.payload) {
-                            await POP3.DELE(item).catch((e) => {
-                                POP3.destroy()
-                                setFail(e)
-                            })
-                        }
+                        await POP3.DELE(action.payload).catch((e) => {
+                            POP3.destroy()
+                            setFail(e)
+                        })
                         POP3.destroy()
                         deleteEmail(action.payload)
                             .then(() => {
@@ -218,7 +215,6 @@ function useMailBoxReducer(config: Config) {
                         const parsedMails = rawMails.map((rawMail) =>
                             parseEmail(rawMail),
                         )
-                        console.log(parsedMails)
                         const sentMails = await getSentEmails(25, 0).then(
                             (data) => data.map((value) => parseEmail(value)),
                         )
@@ -227,7 +223,6 @@ function useMailBoxReducer(config: Config) {
                             sentMails,
                             true,
                         )
-                        console.log(newState)
                         setMailBoxState((old) => ({
                             mailBox: newState,
                             state: "success",
@@ -303,18 +298,18 @@ function useMailBoxReducer(config: Config) {
                     break
             }
         },
-        [setMailBoxState],
+        [setMailBoxState, config],
     )
 
     useEffect(() => {
         setupDB().then(() => {
-            mailBoxDispatch({ action: "Refesh" })
+            mailBoxDispatch({ action: "Get" })
         })
     }, [])
 
     useEffect(() => {
         if (config.server.length) {
-            mailBoxDispatch({ action: "Get" })
+            mailBoxDispatch({ action: "Refesh" })
             const tmp = setInterval(
                 () => mailBoxDispatch({ action: "Refesh" }),
                 config.pullInterval * 1000,
