@@ -74,7 +74,7 @@ function parseHeader(raw: string[]) {
             header[last] = line.slice(sep + 2)
         }
     }
-    // console.log(parseHeader.name, raw, "=>", header)
+    // console.log(parseHeader.name, header)
     // console.log(header)
     return header
 }
@@ -217,6 +217,7 @@ function parsePlain(rawBody: string[]): HTMLElement {
 function parseOther(rawWithHeader: string[]): Attachment {
     const header = parseHeader(rawWithHeader)
     const contentType = parseContentType(header["Content-Type"])
+    // console.log(parseOther.name, contentType)
     const contentPos = parseContentDisposition(header["Content-Disposition"])
     const res: Attachment = {
         filename: contentPos.filename,

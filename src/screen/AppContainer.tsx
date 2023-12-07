@@ -31,8 +31,6 @@ export default function EmailContent() {
     const [editFilter, toggleEditFilter] = useState<Filter>()
     const filters = useMemo(() => Object.keys(mailBox.mailBox), [mailBox])
 
-    console.log(mailBox)
-
     if (!config.validated) {
         return (
             <Navigate

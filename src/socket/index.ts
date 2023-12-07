@@ -124,31 +124,35 @@ class POP3Wrapper {
             } else {
                 this.socket.write(`UIDL ${msgNumber}\r\n`)
             }
-            this.socket.once("data", (data) => {
-                if (data.toString().startsWith("+OK")) {
-                    sub = data
-                        .toString()
-                        .replace("+OK\r\n", "")
-                        .replace("\r\n.\r\n", "")
-                        .split("\r\n")
-                    for (let item of sub) {
-                        const sep = item.indexOf(" ")
-                        const id = parseInt(item.slice(0, sep))
-                        const uid = item.slice(sep + 1)
-                        re.push({
-                            id,
-                            uid,
-                        })
+            let dataRes = ""
+            this.socket.on("data", (data) => {
+                const tmp = data.toString()
+                dataRes += tmp
+                if (tmp.endsWith("\r\n.\r\n")) {
+                    if (dataRes.startsWith("+OK")) {
+                        sub = dataRes
+                            .replace("+OK\r\n", "")
+                            .replace("\r\n.\r\n", "")
+                            .split("\r\n")
+                        for (let item of sub) {
+                            const sep = item.indexOf(" ")
+                            const id = parseInt(item.slice(0, sep))
+                            const uid = item.slice(sep + 1)
+                            re.push({
+                                id,
+                                uid,
+                            })
+                        }
+                        onRes(re)
+                    } else {
+                        onErr(
+                            data
+                                .toString()
+                                .replace("-ERR ", "")
+                                .replace("\r\n", ""),
+                        )
                     }
-                    onRes(re)
-                }
-                if (data.toString().startsWith("-ERR")) {
-                    onErr(
-                        data
-                            .toString()
-                            .replace("-ERR ", "")
-                            .replace("\r\n", ""),
-                    )
+                    this.socket.removeAllListeners("on")
                 }
             })
             this.socket.once("error", (data) => {
@@ -160,18 +164,23 @@ class POP3Wrapper {
     RETR(msgNumber: number): Promise<string> {
         return new Promise((onRes, onErr) => {
             this.socket.write(`RETR ${msgNumber}\r\n`)
-            this.socket.once("data", (data) => {
+            let dataRes = ""
+            this.socket.on("data", (data) => {
                 const tmp = data.toString()
-                if (tmp.startsWith("+OK")) {
-                    onRes(tmp.slice(tmp.indexOf("\r\n")).replace("\n.\n", ""))
-                }
-                if (data.toString().startsWith("-ERR")) {
-                    onErr(
-                        data
-                            .toString()
-                            .replace("-ERR ", "")
-                            .replace("\r\n", "\n"),
-                    )
+                dataRes += tmp
+                if (tmp.endsWith("\r\n.\r\n")) {
+                    if (dataRes.startsWith("+OK")) {
+                        onRes(
+                            dataRes
+                                .slice(dataRes.indexOf("\r\n"))
+                                .replace("\n.\n", ""),
+                        )
+                    } else {
+                        onErr(
+                            dataRes.replace("-ERR ", "").replace("\r\n", "\n"),
+                        )
+                    }
+                    this.socket.removeAllListeners("on")
                 }
             })
             this.socket.once("error", (data) => {

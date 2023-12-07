@@ -1,7 +1,7 @@
 import DoneIcon from "@mui/icons-material/Done"
 import { useContext, useEffect, useRef, useState } from "react"
 import { POP3Wrapper, SMTPWrapper } from "../socket"
-import { useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 import { ConfigContext } from "@/data/provider"
 import VisibilityIcon from "@mui/icons-material/Visibility"
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
@@ -127,6 +127,15 @@ function FirstTime() {
             })
         }
     }, [inputState])
+
+    if (config.validated) {
+        return (
+            <Navigate
+                to="/"
+                replace
+            />
+        )
+    }
 
     return (
         <div
