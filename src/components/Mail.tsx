@@ -316,9 +316,7 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                             ratio="1"
                                             sx={{ minWidth: 120 }}
                                         >
-                                            <div>
-                                                <AttachmentIcon />
-                                            </div>
+                                            <AttachmentIcon />
                                         </AspectRatio>
                                     </CardOverflow>
                                     <Box

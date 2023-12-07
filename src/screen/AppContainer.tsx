@@ -6,11 +6,19 @@ import { ConfigContext, MailBoxContext } from "@/data/provider"
 import Navigation from "@/components/Navigation"
 import MailList from "@/components/MailList"
 import MailContent from "@/components/Mail"
-import { Button, Divider, IconButton, Typography } from "@mui/joy"
+import {
+    Button,
+    CircularProgress,
+    Divider,
+    IconButton,
+    Typography,
+    Snackbar,
+} from "@mui/joy"
 import { useTheme } from "@mui/joy/styles"
 import { Filter } from "@/data/config"
 import EditFilter from "@/components/EditFilter"
 import CloudSyncOutlinedIcon from "@mui/icons-material/CloudSyncOutlined"
+import ErrorOutlineOutlinedIcon from "@mui/icons-material/ErrorOutlineOutlined"
 
 export default function EmailContent() {
     const theme = useTheme()
@@ -23,7 +31,7 @@ export default function EmailContent() {
     const [editFilter, toggleEditFilter] = useState<Filter>()
     const filters = useMemo(() => Object.keys(mailBox.mailBox), [mailBox])
 
-    useEffect(() => console.log("Tracking", selectedFilter), [selectedFilter])
+    console.log(mailBox)
 
     if (!config.validated) {
         return (
@@ -87,11 +95,19 @@ export default function EmailContent() {
                         </p>
                         <div className="flex gap-2">
                             <IconButton
+                                disabled={mailBox.state == "loading"}
                                 onClick={() =>
                                     dispatchMailBox({ action: "Refresh" })
                                 }
                             >
-                                <CloudSyncOutlinedIcon />
+                                {mailBox.state == "loading" ? (
+                                    <CircularProgress
+                                        size="sm"
+                                        variant="soft"
+                                    />
+                                ) : (
+                                    <CloudSyncOutlinedIcon />
+                                )}
                             </IconButton>
                             <Button
                                 variant="solid"
@@ -144,6 +160,17 @@ export default function EmailContent() {
                 setFilter={setSelectedFilter}
                 filter={editFilter!}
             />
+            <Snackbar
+                open={mailBox.state == "failed"}
+                color="danger"
+                variant="soft"
+                size="lg"
+            >
+                <div className="flex gap-2 items-center">
+                    <ErrorOutlineOutlinedIcon />
+                    <p>{mailBox.error}</p>
+                </div>
+            </Snackbar>
         </>
     )
 }
