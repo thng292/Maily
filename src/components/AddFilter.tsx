@@ -153,6 +153,7 @@ export default function AddFilter({
                                 },
                             })
                             updateConfig(old)
+                            setFilterName("")
                             setFilter(filterName)
                             onClose()
                         }}

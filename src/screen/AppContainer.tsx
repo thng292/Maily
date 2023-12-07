@@ -1,4 +1,4 @@
-import { useContext, useState } from "react"
+import { useContext, useEffect, useMemo, useState } from "react"
 import CreateRoundedIcon from "@mui/icons-material/CreateRounded"
 import { Navigate } from "react-router-dom"
 import { Email } from "@/data/email"
@@ -6,10 +6,11 @@ import { ConfigContext, MailBoxContext } from "@/data/provider"
 import Navigation from "@/components/Navigation"
 import MailList from "@/components/MailList"
 import MailContent from "@/components/Mail"
-import { Button, Divider, Typography } from "@mui/joy"
+import { Button, Divider, IconButton, Typography } from "@mui/joy"
 import { useTheme } from "@mui/joy/styles"
 import { Filter } from "@/data/config"
 import EditFilter from "@/components/EditFilter"
+import CloudSyncOutlinedIcon from "@mui/icons-material/CloudSyncOutlined"
 
 export default function EmailContent() {
     const theme = useTheme()
@@ -20,6 +21,10 @@ export default function EmailContent() {
         undefined,
     )
     const [editFilter, toggleEditFilter] = useState<Filter>()
+    const filters = useMemo(() => Object.keys(mailBox.mailBox), [mailBox])
+
+    useEffect(() => console.log("Tracking", selectedFilter), [selectedFilter])
+
     if (!config.validated) {
         return (
             <Navigate
@@ -43,10 +48,11 @@ export default function EmailContent() {
                     }}
                 >
                     <Navigation
-                        filter={Object.keys(mailBox.mailBox)}
+                        filter={filters}
                         currentFilter={selectedFilter}
                         setFilter={setSelectedFilter}
                         deleteFilter={(name) => {
+                            setSelectedFilter("Inbox")
                             const old = structuredClone(config)
                             old.filters.splice(
                                 old.filters.findIndex(
@@ -79,13 +85,21 @@ export default function EmailContent() {
                         <p className="font-semibold text-2xl pb-1">
                             {selectedFilter}
                         </p>
-
-                        <Button
-                            variant="solid"
-                            startDecorator={<CreateRoundedIcon />}
-                        >
-                            Compose
-                        </Button>
+                        <div className="flex gap-2">
+                            <IconButton
+                                onClick={() =>
+                                    dispatchMailBox({ action: "Refresh" })
+                                }
+                            >
+                                <CloudSyncOutlinedIcon />
+                            </IconButton>
+                            <Button
+                                variant="solid"
+                                startDecorator={<CreateRoundedIcon />}
+                            >
+                                Compose
+                            </Button>
+                        </div>
                     </div>
                     <MailList
                         data={mailBox.mailBox[selectedFilter]}
@@ -115,7 +129,7 @@ export default function EmailContent() {
                                 if (selectedMail) {
                                     dispatchMailBox({
                                         action: "Delete",
-                                        payload: selectedMail.id,
+                                        payload: selectedMail.uidl,
                                     })
                                 }
                             }}

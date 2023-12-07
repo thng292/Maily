@@ -1,7 +1,6 @@
 import { app, BrowserWindow, shell, ipcMain, dialog } from "electron"
 import { release } from "node:os"
 import { join } from "node:path"
-import fs from "node:fs"
 
 // The built directory structure
 //

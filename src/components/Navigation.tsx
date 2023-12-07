@@ -150,8 +150,8 @@ export default function Navigation({
                                                     <MenuItem
                                                         variant="soft"
                                                         color="danger"
-                                                        onClick={() => {
-                                                            setFilter("Inbox")
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
                                                             deleteFilter(val)
                                                         }}
                                                     >

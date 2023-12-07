@@ -18,6 +18,9 @@ import {
     getEmails,
     getSentEmails,
     read,
+    updateListID,
+    getListID,
+    deleteNotIn,
 } from "./db"
 import { POP3Wrapper, SMTPWrapper, UIDLResult } from "@/socket"
 import { getDate, parseEmail } from "./parser"
@@ -34,7 +37,7 @@ const EActionKind = {
     Send: "Send",
     Delete: "Delete",
     DeleteSend: "DeleteSend",
-    Refresh: "Refesh",
+    Refresh: "Refresh",
     Get: "Get",
     More: "More",
     MoreSent: "MoreSent",
@@ -49,10 +52,10 @@ type ActionType =
       }
     | {
           action: "Delete"
-          payload: number
+          payload: string
       }
     | {
-          action: "Refesh"
+          action: "Refresh"
       }
     | { action: "Get" }
     | { action: "More" }
@@ -144,7 +147,7 @@ function useMailBoxReducer(config: Config) {
             }))
 
             switch (action.action) {
-                case "Refesh":
+                case "Refresh":
                     {
                         const POP3 = new POP3Wrapper()
                         await POP3.connect(config.server, config.POP3port)
@@ -153,6 +156,7 @@ function useMailBoxReducer(config: Config) {
                         try {
                             let newMails: RawEmail[] = []
                             const uids = await POP3.UIDL()
+                            await deleteNotIn(uids.map((val) => val.uid))
                             for (let uid of uids) {
                                 if (!(await findUIDL(uid.uid))) {
                                     const mail = {
@@ -166,6 +170,8 @@ function useMailBoxReducer(config: Config) {
                                         mail,
                                         getDate(mail.content),
                                     )
+                                } else {
+                                    updateListID(uid.uid, uid.id)
                                 }
                             }
                         } catch (e) {
@@ -201,11 +207,12 @@ function useMailBoxReducer(config: Config) {
                     break
                 case "Delete":
                     {
+                        const listID = await getListID(action.payload)
                         const POP3 = new POP3Wrapper()
                         await POP3.connect(config.server, config.POP3port)
                         await POP3.USER(config.username)
                         await POP3.PASS(config.password)
-                        await POP3.DELE(action.payload).catch((e) => {
+                        await POP3.DELE(listID).catch((e) => {
                             POP3.destroy()
                             setFail(e)
                         })
@@ -339,9 +346,9 @@ function useMailBoxReducer(config: Config) {
 
     useEffect(() => {
         if (config.server.length) {
-            mailBoxDispatch({ action: "Refesh" })
+            mailBoxDispatch({ action: "Refresh" })
             const tmp = setInterval(
-                () => mailBoxDispatch({ action: "Refesh" }),
+                () => mailBoxDispatch({ action: "Refresh" }),
                 config.pullInterval * 1000,
             )
             return () => clearInterval(tmp)
