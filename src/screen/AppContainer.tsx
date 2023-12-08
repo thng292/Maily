@@ -37,7 +37,7 @@ export default function EmailContent() {
                 }}
             >
                 <div
-                    className="basis-48 flex flex-col flex-shrink-0 p-2"
+                    className="flex flex-col flex-shrink-0 p-2 basis-48"
                     style={{
                         height: "100dvh",
                     }}
@@ -65,24 +65,25 @@ export default function EmailContent() {
                 </div>
                 <Divider orientation="vertical"></Divider>
                 <div
-                    className="overflow-x-hidden flex flex-col flex-grow lg:flex-grow-0 lg:flex-shrink-0 lg:basis-96 relative"
+                    className="relative flex flex-col flex-grow overflow-x-hidden lg:flex-grow-0 lg:flex-shrink-0 lg:basis-96"
                     style={{
                         height: "100dvh",
                     }}
                 >
                     <div
-                        className="p-4 flex justify-between items-baseline sticky top-0 z-50"
+                        className="sticky top-0 z-50 flex items-baseline justify-between p-4"
                         style={{
                             backgroundColor: theme.palette.background.surface,
                         }}
                     >
-                        <p className="font-semibold text-2xl pb-1">
+                        <p className="pb-1 text-2xl font-semibold">
                             {selectedFilter}
                         </p>
 
                         <Button
                             variant="solid"
                             startDecorator={<CreateRoundedIcon />}
+                            onClick={() => {}}
                         >
                             Compose
                         </Button>
@@ -102,12 +103,12 @@ export default function EmailContent() {
                     />
                 </div>
                 <div
-                    className="flex flex-col lg:flex-1 overflow-auto"
+                    className="flex flex-col overflow-auto lg:flex-1"
                     style={{
                         height: "100dvh",
                     }}
                 >
-                    <div className="flex-grow flex">
+                    <div className="flex flex-grow">
                         <MailContent
                             mail={selectedMail}
                             replyMail={() => {}}
