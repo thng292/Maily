@@ -15,6 +15,7 @@ import { Attachment, Email } from "@/data/email"
 import AttachmentIcon from "@mui/icons-material/Attachment"
 import { CardContent, CardCover } from "@mui/joy"
 import fs from "node:fs"
+import { GetFileSize } from "@/utils/GetFileSize"
 
 export default function EmailContent({
     mail,
@@ -197,7 +198,7 @@ export default function EmailContent({
         )
     } else {
         return (
-            <div className="lg:flex hidden items-center justify-center flex-col flex-grow gap-4">
+            <div className="flex-col items-center justify-center flex-grow hidden gap-4 lg:flex">
                 <img
                     src="./icon.png"
                     width={200}
@@ -283,13 +284,7 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                             level="body-sm"
                                             textColor="neutral.300"
                                         >
-                                            {(
-                                                ((attch.contentBase64.length /
-                                                    4) *
-                                                    3) /
-                                                1024
-                                            ).toFixed(2)}{" "}
-                                            KB
+                                            {GetFileSize(attch)}
                                         </Typography>
                                     </CardContent>
                                 </Card>

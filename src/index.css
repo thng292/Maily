@@ -31,8 +31,8 @@
 }
 
 .ql-container {
-    min-height: 20rem;
-    max-height: 20rem;
+    min-height: 10rem;
+    max-height: 10rem;
     flex: 1;
     display: flex;
     flex-direction: column;

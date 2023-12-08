@@ -6,14 +6,18 @@ import FormControl from "@mui/joy/FormControl"
 import FormLabel from "@mui/joy/FormLabel"
 import Textarea from "@mui/joy/Textarea"
 import Sheet from "@mui/joy/Sheet"
-import { IconButton, Input, Stack, Typography } from "@mui/joy"
+import { Container, IconButton, Input, Stack, Typography } from "@mui/joy"
 
 import QEditor from "./QEditor"
-import { MailBuilder } from "@/data/email"
+import { Attachment, MailBuilder } from "@/data/email"
 import { useState } from "react"
 import { ConfigContext, MailBoxContext } from "@/data/provider"
-import { fileTypeFromFile } from "file-type"
-// import { fileTypeFromFile } from "file-type"
+import { GetFileSize } from "@/utils/GetFileSize"
+import { AttachmentOutlined } from "@mui/icons-material"
+import mime from "mime"
+import fs from "fs"
+import path from "path"
+import AttachmentCard from "./AttachmentCard"
 
 interface WriteEmailProps {
     open?: boolean
@@ -29,30 +33,54 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
 
         const [config, updateConfig] = React.useContext(ConfigContext)
         const [mailbox, dispatchMailBox] = React.useContext(MailBoxContext)
-        const [attatchments, setAttatchments] = useState()
+        const [attatchments, setAttatchments] = useState<Attachment[]>()
 
         const sendMail = React.useCallback(() => {
             const newDiv = document.createElement("div")
             newDiv.innerHTML = value
-            console.log(value)
             let mail = new MailBuilder()
             mail.addContent(newDiv)
             mail.addReceiver(receiver.split(","))
             mail.addSender(config.username)
             mail.addBCC(bcc.split(",").map((val) => val.trim()))
             mail.addCC(cc.split(",").map((val) => val.trim()))
-            // mail.addAttachment()
-
+            if (attatchments) {
+                mail.addAttachment(attatchments)
+            }
             dispatchMailBox({ action: "Send", payload: mail })
         }, [value, receiver, config, dispatchMailBox])
 
         const handleFile = React.useCallback(async () => {
-            let res = await window.electronAPI.openLoad()
-            let files = res?.map((filePath) => {
-                return fileTypeFromFile(filePath)
+            let filePaths = await window.electronAPI.openLoad()
+            if (filePaths) {
+                let attList = filePaths.map((filePath) => {
+                    const fileName = path.basename(filePath)
+                    const fileMime = mime.getType(filePath)
+                    const fileContent = fs.readFileSync(filePath, {
+                        encoding: "base64",
+                    })
+                    let att: Attachment = {
+                        filename: fileName,
+                        mime: fileMime!,
+                        contentBase64: fileContent,
+                    }
+                    return att
+                })
+                if (attatchments) {
+                    setAttatchments([...attatchments, ...attList])
+                } else {
+                    setAttatchments(attList)
+                }
+            }
+        }, [attatchments])
+
+        function deleteAttach(index: number) {
+            setAttatchments((prev) => {
+                const updatedAttach = [...prev!]
+                updatedAttach.splice(index, 1)
+                return updatedAttach
             })
-            console.log(files)
-        }, [])
+        }
 
         return (
             <Sheet
@@ -128,14 +156,37 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                             setValue={setValue}
                         ></QEditor>
                     </FormControl>
-                    <Button
-                        color="primary"
-                        sx={{ borderRadius: "sm" }}
-                        onClick={sendMail}
+                    <Stack
+                        direction="row"
+                        alignItems="center"
                     >
-                        Send
-                    </Button>
-                    <Button onClick={handleFile}>Attatchment</Button>
+                        <IconButton onClick={handleFile}>
+                            <AttachmentOutlined></AttachmentOutlined>
+                        </IconButton>
+                        {attatchments && (
+                            <Stack
+                                direction="row"
+                                className="h-full overflow-x-scroll grow"
+                                justifyContent="flex-start"
+                                alignItems="center"
+                            >
+                                {attatchments.map((attach, index) => (
+                                    <AttachmentCard
+                                        key={attach.filename}
+                                        attachment={attach}
+                                        onDelete={() => deleteAttach(index)}
+                                    ></AttachmentCard>
+                                ))}
+                            </Stack>
+                        )}
+                        <Button
+                            color="primary"
+                            sx={{ borderRadius: "sm" }}
+                            onClick={sendMail}
+                        >
+                            Send
+                        </Button>
+                    </Stack>
                 </Box>
             </Sheet>
         )
