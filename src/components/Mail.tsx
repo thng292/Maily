@@ -288,7 +288,7 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                                     4) *
                                                     3) /
                                                 1024
-                                            ).toPrecision(2)}{" "}
+                                            ).toFixed(2)}{" "}
                                             KB
                                         </Typography>
                                     </CardContent>
@@ -316,9 +316,7 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                             ratio="1"
                                             sx={{ minWidth: 120 }}
                                         >
-                                            <div>
-                                                <AttachmentIcon />
-                                            </div>
+                                            <AttachmentIcon />
                                         </AspectRatio>
                                     </CardOverflow>
                                     <Box
@@ -332,6 +330,18 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                             color="primary"
                                         >
                                             {attch.filename}
+                                        </Typography>
+                                        <Typography
+                                            level="body-sm"
+                                            textColor="neutral"
+                                        >
+                                            {(
+                                                ((attch.contentBase64.length /
+                                                    4) *
+                                                    3) /
+                                                1024
+                                            ).toFixed(2)}{" "}
+                                            KB
                                         </Typography>
                                     </Box>
                                 </Card>

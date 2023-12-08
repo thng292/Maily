@@ -81,6 +81,7 @@ export function setupDB(): Promise<void> {
             sql: `
             CREATE TABLE IF NOT EXISTS Inbox (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                listid INTEGER NOT NULL,
                 uidl TEXT UNIQUE NOT NULL,
                 timestamp TIMESTAMP NOT NULL DEFAULT (DATETIME('now')),
                 content TEXT NOT NULL,
@@ -103,10 +104,11 @@ export function addRawEmail(rawEmail: RawEmail, date?: Date): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         let query = ""
-        if (date) {
-            query = `INSERT INTO Inbox (id, uidl, content) VALUES ($id, $uidl, $content)`
+        console.log("Not undefined", date)
+        if (date != undefined) {
+            query = `INSERT INTO Inbox (listid, uidl, timestamp, content) VALUES ($id, $uidl, $date, $content)`
         } else {
-            query = `INSERT INTO Inbox (id, uidl, timestamp, content) VALUES ($id, $uidl, $date, $content)`
+            query = `INSERT INTO Inbox (listid, uidl, content) VALUES ($id, $uidl, $content)`
         }
         dbWorker.postMessage({
             id: id,
@@ -116,7 +118,7 @@ export function addRawEmail(rawEmail: RawEmail, date?: Date): Promise<void> {
                 $id: rawEmail.id,
                 $uidl: rawEmail.uidl,
                 $content: rawEmail.content,
-                $date: date,
+                $date: date?.toISOString(),
             },
         })
         successCb[id] = () => {
@@ -154,16 +156,15 @@ export function sendEmail(content: string): Promise<void> {
     })
 }
 
-export function deleteEmail(emailID: number): Promise<void> {
+export function deleteEmail(uidl: string): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `DELETE FROM Inbox WHERE id = $id;
-                  UPDATE Inbox SET id = id - 1 WHERE id > $id;`,
+            sql: `DELETE FROM Inbox WHERE uidl = $id`,
             params: {
-                $id: emailID,
+                $id: uidl,
             },
         })
         successCb[id] = () => {
@@ -202,7 +203,7 @@ export function getEmails(limit: number, offset: number): Promise<RawEmail[]> {
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `SELECT id, uidl, content, read FROM Inbox ORDER BY DATE(Inbox.timestamp) LIMIT $limit OFFSET $offset`,
+            sql: `SELECT id, uidl, content, read FROM Inbox ORDER BY DATE(Inbox.timestamp) DESC LIMIT $limit OFFSET $offset`,
             params: {
                 $limit: limit,
                 $offset: offset,
@@ -357,7 +358,76 @@ export function unread(uidl: string): Promise<void> {
             },
         })
         successCb[id] = () => {
-            console.log(id, sendEmail.name)
+            console.log(id, unread.name)
+            onSuccess()
+        }
+        // errorCb[id] = onError
+        errorCb[id] = (e) => {
+            console.log(id, read.name, e)
+            onError(e)
+        }
+    })
+}
+
+export function updateListID(uidl: string, listID: number) {
+    return new Promise<void>((onSuccess, onError) => {
+        const id = getQueryID()
+        dbWorker.postMessage({
+            id: id,
+            action: "exec",
+            sql: `UPDATE Inbox SET listid = $id WHERE uidl = $uid`,
+            params: {
+                $id: listID,
+                $uid: uidl,
+            },
+        })
+        successCb[id] = () => {
+            console.log(id, updateListID.name)
+            onSuccess()
+        }
+        // errorCb[id] = onError
+        errorCb[id] = (e) => {
+            console.log(id, read.name, e)
+            onError(e)
+        }
+    })
+}
+
+export function getListID(uidl: string) {
+    return new Promise<number>((onSuccess, onError) => {
+        const id = getQueryID()
+        dbWorker.postMessage({
+            id: id,
+            action: "get",
+            sql: `SELECT listid FROM Inbox WHERE uidl = $uid`,
+            params: {
+                $uid: uidl,
+            },
+        })
+        successCb[id] = ((res: [number]) => {
+            console.log(id, getListID.name)
+            onSuccess(res[0])
+        }) as unknown as SuccessCB_T
+        // errorCb[id] = onError
+        errorCb[id] = (e) => {
+            console.log(id, read.name, e)
+            onError(e)
+        }
+    })
+}
+
+export function deleteNotIn(uidls: string[]) {
+    return new Promise<void>((onSuccess, onError) => {
+        const id = getQueryID()
+        dbWorker.postMessage({
+            id: id,
+            action: "exec",
+            sql: `DELETE FROM Inbox WHERE uidl NOT IN (${uidls
+                .map((val) => `'${val}'`)
+                .join(",")})`,
+        })
+        successCb[id] = () => {
+            console.log(id, deleteNotIn.name)
             onSuccess()
         }
         // errorCb[id] = onError

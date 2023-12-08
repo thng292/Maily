@@ -1,15 +1,16 @@
 import { type Email, type Attachment, type RawEmail } from "./types"
 
-export function getDate(rawMail: string): Date {
+export function getDate(rawMail: string) {
     const dateI = rawMail.indexOf("Date: ")
     if (dateI < 0) {
-        return new Date()
+        return undefined
     }
-    const dateStr = rawMail.slice(dateI, rawMail.indexOf("\n", dateI))
+    const dateStr = rawMail.slice(dateI + 6, rawMail.indexOf("\n", dateI))
+    console.log(getDate.name, dateStr)
     const date = new Date(dateStr)
     // @ts-ignore
-    if (!isNaN(date)) {
-        return new Date()
+    if (isNaN(date)) {
+        return undefined
     }
     return date
 }
@@ -73,7 +74,8 @@ function parseHeader(raw: string[]) {
             header[last] = line.slice(sep + 2)
         }
     }
-    // console.log(parseHeader.name, raw, "=>", header)
+    // console.log(parseHeader.name, header)
+    // console.log(header)
     return header
 }
 
@@ -113,7 +115,6 @@ function parseMultipartBody(
     boundary: string,
     subtype: string,
 ): { content: HTMLElement; attachments: Attachment[] } {
-    // console.log(parseMultipartBody.name, arguments)
     // @ts-ignore
     const res: ReturnType<typeof parseMultipartBody> = { attachments: [] }
 
@@ -191,7 +192,6 @@ function parseMultipartBody(
             }
             break
         default:
-            // console.log("Parsing other", raw)
             res.attachments.push(parseOther(raw))
             break
     }
@@ -210,13 +210,14 @@ function parseHTML(rawBody: string[]): HTMLElement {
 function parsePlain(rawBody: string[]): HTMLElement {
     const content = document.createElement("p")
     content.style.fontFamily = "monospace"
-    content.innerText = rawBody.join("\n")
+    content.innerText = rawBody.slice(rawBody.indexOf("")).join("\n")
     return content
 }
 
 function parseOther(rawWithHeader: string[]): Attachment {
     const header = parseHeader(rawWithHeader)
     const contentType = parseContentType(header["Content-Type"])
+    // console.log(parseOther.name, contentType)
     const contentPos = parseContentDisposition(header["Content-Disposition"])
     const res: Attachment = {
         filename: contentPos.filename,

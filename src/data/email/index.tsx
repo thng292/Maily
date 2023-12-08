@@ -18,6 +18,9 @@ import {
     getEmails,
     getSentEmails,
     read,
+    updateListID,
+    getListID,
+    deleteNotIn,
 } from "./db"
 import { POP3Wrapper, SMTPWrapper, UIDLResult } from "@/socket"
 import { getDate, parseEmail } from "./parser"
@@ -34,7 +37,7 @@ const EActionKind = {
     Send: "Send",
     Delete: "Delete",
     DeleteSend: "DeleteSend",
-    Refresh: "Refesh",
+    Refresh: "Refresh",
     Get: "Get",
     More: "More",
     MoreSent: "MoreSent",
@@ -49,10 +52,10 @@ type ActionType =
       }
     | {
           action: "Delete"
-          payload: number
+          payload: string
       }
     | {
-          action: "Refesh"
+          action: "Refresh"
       }
     | { action: "Get" }
     | { action: "More" }
@@ -81,7 +84,6 @@ function useMailBoxReducer(config: Config) {
             config: Config,
         ) => {
             const old: FilteredMailBox = {}
-            console.log("From filter and Add", config)
             if (mails != null) {
                 if (eraseOld) {
                     for (let filter of config.filters) {
@@ -144,15 +146,16 @@ function useMailBoxReducer(config: Config) {
             }))
 
             switch (action.action) {
-                case "Refesh":
+                case "Refresh":
                     {
                         const POP3 = new POP3Wrapper()
-                        await POP3.connect(config.server, config.POP3port)
-                        await POP3.USER(config.username)
-                        await POP3.PASS(config.password)
                         try {
+                            await POP3.connect(config.server, config.POP3port)
+                            await POP3.USER(config.username)
+                            await POP3.PASS(config.password)
                             let newMails: RawEmail[] = []
                             const uids = await POP3.UIDL()
+                            await deleteNotIn(uids.map((val) => val.uid))
                             for (let uid of uids) {
                                 if (!(await findUIDL(uid.uid))) {
                                     const mail = {
@@ -166,14 +169,16 @@ function useMailBoxReducer(config: Config) {
                                         mail,
                                         getDate(mail.content),
                                     )
+                                } else {
+                                    updateListID(uid.uid, uid.id)
                                 }
                             }
+                            SaveDB()
+                            mailBoxDispatch({ action: "Get" })
                         } catch (e) {
                             setFail(String(e))
                         }
                         POP3.destroy()
-                        SaveDB()
-                        mailBoxDispatch({ action: "Get" })
                     }
                     break
                 case "Send":
@@ -201,20 +206,23 @@ function useMailBoxReducer(config: Config) {
                     break
                 case "Delete":
                     {
+                        const listID = await getListID(action.payload)
                         const POP3 = new POP3Wrapper()
-                        await POP3.connect(config.server, config.POP3port)
-                        await POP3.USER(config.username)
-                        await POP3.PASS(config.password)
-                        await POP3.DELE(action.payload).catch((e) => {
+                        try {
+                            await POP3.connect(config.server, config.POP3port)
+                            await POP3.USER(config.username)
+                            await POP3.PASS(config.password)
+                            await POP3.DELE(listID).catch((e) => {
+                                POP3.destroy()
+                                setFail(e)
+                            })
                             POP3.destroy()
-                            setFail(e)
-                        })
-                        POP3.destroy()
-                        deleteEmail(action.payload)
-                            .then(() => {
+                            deleteEmail(action.payload).then(() => {
                                 mailBoxDispatch({ action: "Get" })
                             })
-                            .catch(setFail)
+                        } catch (e) {
+                            setFail(String(e))
+                        }
                     }
                     break
                 case "DeleteSend":
@@ -227,22 +235,18 @@ function useMailBoxReducer(config: Config) {
                 case "Get":
                     try {
                         const rawMails = await getEmails(25, 0)
-                        console.info("ok")
                         const parsedMails = rawMails.map((rawMail) =>
                             parseEmail(rawMail),
                         )
-                        console.info("ok")
                         const sentMails = await getSentEmails(25, 0).then(
                             (data) => data.map((value) => parseEmail(value)),
                         )
-                        console.info("ok")
                         const newState = filterAndAdd(
                             parsedMails,
                             sentMails,
                             true,
                             config,
                         )
-                        console.info("ok")
                         setMailBoxState((old) => ({
                             mailBox: newState,
                             state: "success",
@@ -339,9 +343,9 @@ function useMailBoxReducer(config: Config) {
 
     useEffect(() => {
         if (config.server.length) {
-            mailBoxDispatch({ action: "Refesh" })
+            mailBoxDispatch({ action: "Refresh" })
             const tmp = setInterval(
-                () => mailBoxDispatch({ action: "Refesh" }),
+                () => mailBoxDispatch({ action: "Refresh" }),
                 config.pullInterval * 1000,
             )
             return () => clearInterval(tmp)

@@ -159,7 +159,7 @@ AAAASUVORK5CYII=`,
             >
                 ResetConfig
             </button>
-            <button onClick={() => dispatchMailBox({ action: "Refesh" })}>
+            <button onClick={() => dispatchMailBox({ action: "Refresh" })}>
                 Refresh
             </button>
             <button onClick={() => dispatchMailBox({ action: "Get" })}>
