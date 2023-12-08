@@ -6,7 +6,6 @@ export function getDate(rawMail: string) {
         return undefined
     }
     const dateStr = rawMail.slice(dateI + 6, rawMail.indexOf("\n", dateI))
-    console.log(getDate.name, dateStr)
     const date = new Date(dateStr)
     // @ts-ignore
     if (isNaN(date)) {

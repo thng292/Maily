@@ -125,7 +125,10 @@ export class MailBuilder {
                     tmp += `Content-Type: ${item.mime}; name="${item.filename}"\r\n`
                     tmp += `Content-Disposition: attachment; filename="${item.filename}"\r\n`
                     tmp += "Content-Transfer-Encoding: base64\r\n\r\n"
-                    tmp += item.contentBase64 + "\r\n\r\n"
+                    for (let i = 0; i < item.contentBase64.length; i += 70) {
+                        tmp += item.contentBase64.slice(i, i + 70) + "\r\n"
+                    }
+                    tmp += "\r\n\r\n"
                 }
             }
 

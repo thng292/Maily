@@ -101,6 +101,7 @@ export function setupDB(): Promise<void> {
 }
 
 export function addRawEmail(rawEmail: RawEmail, date?: Date): Promise<void> {
+    console.log(rawEmail)
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         let query = ""
