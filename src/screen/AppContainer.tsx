@@ -19,6 +19,7 @@ import { Filter } from "@/data/config"
 import EditFilter from "@/components/EditFilter"
 import CloudSyncOutlinedIcon from "@mui/icons-material/CloudSyncOutlined"
 import ErrorOutlineOutlinedIcon from "@mui/icons-material/ErrorOutlineOutlined"
+import WriteEmail from "@/components/WriteEmail"
 
 export default function EmailContent() {
     const theme = useTheme()
@@ -30,6 +31,7 @@ export default function EmailContent() {
     )
     const [editFilter, toggleEditFilter] = useState<Filter>()
     const filters = useMemo(() => Object.keys(mailBox.mailBox), [mailBox])
+    const [open, setOpen] = useState(false)
 
     if (!config.validated) {
         return (
@@ -110,7 +112,7 @@ export default function EmailContent() {
                             <Button
                                 variant="solid"
                                 startDecorator={<CreateRoundedIcon />}
-                                onClick={() => {}}
+                                onClick={() => setOpen(true)}
                             >
                                 Compose
                             </Button>
@@ -128,6 +130,11 @@ export default function EmailContent() {
                             }
                             setSelectedMail(mail)
                         }}
+                    />
+
+                    <WriteEmail
+                        open={open}
+                        onClose={() => setOpen(false)}
                     />
                 </div>
                 <div

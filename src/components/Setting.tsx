@@ -17,6 +17,9 @@ import {
     Modal,
     ModalDialog,
     ListItemButton,
+    Switch,
+    useColorScheme,
+    useTheme,
 } from "@mui/joy"
 
 export default function Settings({
@@ -28,6 +31,9 @@ export default function Settings({
 }) {
     const [config, updateConfig] = useContext(ConfigContext)
     const pullInterRef = useRef<HTMLInputElement>(null)
+    const { mode, setMode } = useColorScheme()
+    const theme = useTheme()
+    const isDarkTheme = theme.palette.mode === "dark"
     return (
         <Modal
             open={open}
@@ -62,6 +68,22 @@ export default function Settings({
                                     }}
                                 ></Input>
                             </ListItemDecorator>
+                        </ListItem>
+
+                        <ListItem
+                            endAction={
+                                <Switch
+                                    sx={{ ml: 1 }}
+                                    checked={isDarkTheme}
+                                    onClick={() =>
+                                        setMode(
+                                            mode === "dark" ? "light" : "dark",
+                                        )
+                                    }
+                                />
+                            }
+                        >
+                            <Typography component="label">Dark mode</Typography>
                         </ListItem>
                         <ListItemButton
                             color="danger"

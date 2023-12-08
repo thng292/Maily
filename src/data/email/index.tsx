@@ -187,7 +187,7 @@ function useMailBoxReducer(config: Config) {
                         const mail = action.payload.toString()
                         SMTP.send(
                             config.server,
-                            config.POP3port,
+                            config.SMTPport,
                             action.payload.getSender(),
                             action.payload.getReceivers(),
                             mail,

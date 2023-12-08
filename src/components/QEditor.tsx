@@ -2,9 +2,12 @@ import React, { useState } from "react"
 import ReactQuill from "react-quill"
 import "react-quill/dist/quill.snow.css"
 
-function QEditor() {
-    const [value, setValue] = useState("")
+interface Props {
+    value: string
+    setValue: (val: string) => void
+}
 
+const QEditor = ({ value, setValue }: Props) => {
     var toolbarOptions = [
         ["bold", "italic", "underline", "strike"], // toggled buttons
         ["blockquote", "code-block"],
@@ -19,7 +22,6 @@ function QEditor() {
         [{ header: [1, 2, 3, 4, 5, 6, false] }],
 
         [{ color: [] }, { background: [] }], // dropdown with defaults from theme
-        [{ font: [] }],
         [{ align: [] }],
 
         ["clean"], // remove formatting button
@@ -35,6 +37,7 @@ function QEditor() {
             theme="snow"
             value={value}
             onChange={setValue}
+            className="rounded-lg"
         />
     )
 }

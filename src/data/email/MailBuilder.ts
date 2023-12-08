@@ -88,8 +88,8 @@ export class MailBuilder {
             tmp.appendChild(body)
             textContent =
                 "<!DOCTYPE html>\r\n<html>\r\n" +
-                tmp.innerHTML.replaceAll("\n", "\r\n")
-            ;("\r\n</html>\r\n\r\n")
+                tmp.innerHTML.replaceAll("\n", "\r\n") +
+                "\r\n</html>\r\n\r\n"
         } else {
             this.#content = document.createElement("p")
             textContent = ""
