@@ -75,6 +75,7 @@ export default function EmailList({
                                     sx={{ mb: 0.5 }}
                                     noWrap
                                     maxWidth={"80%"}
+                                    height={"1lh"}
                                 >
                                     {item.subject}
                                 </Typography>

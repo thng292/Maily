@@ -107,7 +107,7 @@ export class MailBuilder {
                     tmp +=
                         "\r\nthis is a multi-part message in MIME format.\r\n"
                 }
-                tmp += mimeBoudary[1] + "\r\n"
+                tmp += "--" + mimeBoudary[1] + "\r\n"
                 tmp +=
                     "Content-Type: text/plain; charset=UTF-8; format=flowed\r\n"
                 tmp += "Content-Transfer-Encoding: 7bit\r\n\r\n"

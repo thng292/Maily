@@ -204,7 +204,7 @@ export function getEmails(limit: number, offset: number): Promise<RawEmail[]> {
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `SELECT id, uidl, content, read FROM Inbox ORDER BY DATE(Inbox.timestamp) DESC LIMIT $limit OFFSET $offset`,
+            sql: `SELECT id, uidl, content, read FROM Inbox ORDER BY DATETIME(Inbox.timestamp) DESC LIMIT $limit OFFSET $offset`,
             params: {
                 $limit: limit,
                 $offset: offset,
@@ -238,7 +238,7 @@ export function getSentEmails(
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `SELECT id, content FROM Sent ORDER BY DATE(Sent.timestamp) LIMIT $limit OFFSET $offset`,
+            sql: `SELECT id, content FROM Sent ORDER BY DATETIME(Sent.timestamp) DESC LIMIT $limit OFFSET $offset`,
             params: {
                 $limit: limit,
                 $offset: offset,

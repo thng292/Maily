@@ -62,7 +62,7 @@ export default function EmailContent({
                                 textColor="text.primary"
                                 mb={0.5}
                             >
-                                {mail.sender}
+                                From: {mail.sender}
                             </Typography>
                             <Typography
                                 level="body-sm"
