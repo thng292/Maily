@@ -32,6 +32,8 @@ export default function EmailContent() {
     const [editFilter, toggleEditFilter] = useState<Filter>()
     const filters = useMemo(() => Object.keys(mailBox.mailBox), [mailBox])
     const [open, setOpen] = useState(false)
+    const [isReply, setIsReply] = useState(false)
+    const [isForward, setIsForward] = useState(false)
 
     if (!config.validated) {
         return (
@@ -134,7 +136,14 @@ export default function EmailContent() {
 
                     <WriteEmail
                         open={open}
-                        onClose={() => setOpen(false)}
+                        isReply={isReply}
+                        isForward={isForward}
+                        mail={selectedMail}
+                        onClose={() => {
+                            setOpen(false)
+                            setIsReply(false)
+                            setIsForward(false)
+                        }}
                     />
                 </div>
                 <div
@@ -146,7 +155,11 @@ export default function EmailContent() {
                     <div className="flex flex-grow">
                         <MailContent
                             mail={selectedMail}
-                            replyMail={() => {}}
+                            replyMail={() => {
+                                setIsReply(true)
+                                setOpen(true)
+                                setIsForward(false)
+                            }}
                             deleteMail={() => {
                                 if (selectedMail) {
                                     dispatchMailBox({
@@ -155,7 +168,11 @@ export default function EmailContent() {
                                     })
                                 }
                             }}
-                            forwardMail={() => {}}
+                            forwardMail={() => {
+                                setIsForward(true)
+                                setOpen(true)
+                                setIsReply(false)
+                            }}
                         />
                     </div>
                 </div>

@@ -9,7 +9,7 @@ import Sheet from "@mui/joy/Sheet"
 import { Container, IconButton, Input, Stack, Typography } from "@mui/joy"
 
 import QEditor from "./QEditor"
-import { Attachment, MailBuilder } from "@/data/email"
+import { Attachment, Email, MailBuilder } from "@/data/email"
 import { useState } from "react"
 import { ConfigContext, MailBoxContext } from "@/data/provider"
 import { GetFileSize } from "@/utils/GetFileSize"
@@ -18,22 +18,47 @@ import mime from "mime"
 import fs from "fs"
 import path from "path"
 import AttachmentCard from "./AttachmentCard"
+import ReactDOMServer from "react-dom/server"
 
 interface WriteEmailProps {
-    open?: boolean
-    onClose?: () => void
+    open: boolean
+    onClose: () => void
+    isReply: boolean
+    isForward: boolean
+    mail?: Email
 }
 
 const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
-    function WriteEmail({ open, onClose }, ref) {
+    function WriteEmail({ open, onClose, isReply, isForward, mail }, ref) {
         const [value, setValue] = useState("")
         const [receiver, setReceiver] = useState("")
         const [bcc, setBcc] = useState("")
         const [cc, setCc] = useState("")
+        const [subject, setSubject] = useState("")
+        const [sending, setSending] = useState(false)
 
         const [config, updateConfig] = React.useContext(ConfigContext)
         const [mailbox, dispatchMailBox] = React.useContext(MailBoxContext)
         const [attatchments, setAttatchments] = useState<Attachment[]>()
+
+        React.useEffect(() => {
+            if (isReply) {
+                setReceiver(mail!.sender)
+                setValue("")
+            }
+            if (isForward) {
+                setValue(mail!.content.outerHTML)
+                setAttatchments(mail!.attachment)
+                setReceiver("")
+            }
+
+            if (sending) {
+                if (mailbox.state == "success") {
+                    setSending(false)
+                    onClose()
+                }
+            }
+        }, [isReply, isForward, mailbox])
 
         const sendMail = React.useCallback(() => {
             const newDiv = document.createElement("div")
@@ -48,6 +73,7 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                 mail.addAttachment(attatchments)
             }
             dispatchMailBox({ action: "Send", payload: mail })
+            setSending(true)
         }, [value, receiver, config, dispatchMailBox])
 
         const handleFile = React.useCallback(async () => {
@@ -74,13 +100,16 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
             }
         }, [attatchments])
 
-        function deleteAttach(index: number) {
-            setAttatchments((prev) => {
-                const updatedAttach = [...prev!]
-                updatedAttach.splice(index, 1)
-                return updatedAttach
-            })
-        }
+        const deleteAttach = React.useCallback(
+            (index: number) => {
+                setAttatchments((prev) => {
+                    const updatedAttach = [...prev!]
+                    updatedAttach.splice(index, 1)
+                    return updatedAttach
+                })
+            },
+            [attatchments],
+        )
 
         return (
             <Sheet
@@ -126,8 +155,8 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                             placeholder="email@email.com"
                             aria-label="Message"
                             type="email"
-                            onChange={(e) => setReceiver(e.target.value)}
                             value={receiver}
+                            onChange={(e) => setReceiver(e.target.value)}
                         />
                     </FormControl>
                     <FormControl>
@@ -135,6 +164,7 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                         <Input
                             placeholder="email@email.com"
                             aria-label="Message"
+                            value={cc}
                             onChange={(e) => setCc(e.target.value)}
                         />
                     </FormControl>
@@ -143,12 +173,15 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                         <Input
                             placeholder="email@email.com"
                             aria-label="Message"
+                            value={bcc}
                             onChange={(e) => setBcc(e.target.value)}
                         />
                     </FormControl>
                     <Input
                         placeholder="Subject"
                         aria-label="Message"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
                     />
                     <FormControl>
                         <QEditor
@@ -159,6 +192,7 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                     <Stack
                         direction="row"
                         alignItems="center"
+                        justifyContent="space-between"
                     >
                         <IconButton onClick={handleFile}>
                             <AttachmentOutlined></AttachmentOutlined>
@@ -183,6 +217,7 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                             color="primary"
                             sx={{ borderRadius: "sm" }}
                             onClick={sendMail}
+                            loading={sending}
                         >
                             Send
                         </Button>
