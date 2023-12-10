@@ -1,7 +1,7 @@
-import { useContext, useEffect, useMemo, useState } from "react"
+import { useContext, useMemo, useState } from "react"
 import CreateRoundedIcon from "@mui/icons-material/CreateRounded"
 import { Navigate } from "react-router-dom"
-import { Email } from "@/data/email"
+import { AllFilter } from "@/data/email"
 import { ConfigContext, MailBoxContext } from "@/data/provider"
 import Navigation from "@/components/Navigation"
 import MailList from "@/components/MailList"
@@ -11,7 +11,6 @@ import {
     CircularProgress,
     Divider,
     IconButton,
-    Typography,
     Snackbar,
 } from "@mui/joy"
 import { useTheme } from "@mui/joy/styles"
@@ -25,12 +24,11 @@ export default function EmailContent() {
     const theme = useTheme()
     const [config, setConfig] = useContext(ConfigContext)
     const [mailBox, dispatchMailBox] = useContext(MailBoxContext)
-    const [selectedFilter, setSelectedFilter] = useState("Inbox")
-    const [selectedMail, setSelectedMail] = useState<Email | undefined>(
-        undefined,
-    )
     const [editFilter, toggleEditFilter] = useState<Filter>()
-    const filters = useMemo(() => Object.keys(mailBox.mailBox), [mailBox])
+    const filters = useMemo(
+        () => config.filters.map((val) => val.name),
+        [config],
+    )
     const [open, setOpen] = useState(false)
     const [isReply, setIsReply] = useState(false)
     const [isForward, setIsForward] = useState(false)
@@ -59,10 +57,22 @@ export default function EmailContent() {
                 >
                     <Navigation
                         filter={filters}
-                        currentFilter={selectedFilter}
-                        setFilter={setSelectedFilter}
+                        currentFilter={mailBox.currentFilter.name}
+                        setFilter={(name) => {
+                            console.log("Name", name)
+                            const newFilter = config.filters.find(
+                                (value) => value.name == name,
+                            )
+                            dispatchMailBox({
+                                action: "Get",
+                                filter: newFilter ?? ({ name } as AllFilter),
+                            })
+                        }}
                         deleteFilter={(name) => {
-                            setSelectedFilter("Inbox")
+                            dispatchMailBox({
+                                action: "Get",
+                                filter: { name: "Inbox" },
+                            })
                             const old = structuredClone(config)
                             old.filters.splice(
                                 old.filters.findIndex(
@@ -93,7 +103,7 @@ export default function EmailContent() {
                         }}
                     >
                         <p className="pb-1 text-2xl font-semibold">
-                            {selectedFilter}
+                            {mailBox.currentFilter.name}
                         </p>
                         <div className="flex gap-2">
                             <IconButton
@@ -121,16 +131,29 @@ export default function EmailContent() {
                         </div>
                     </div>
                     <MailList
-                        data={mailBox.mailBox[selectedFilter]}
-                        selected={selectedMail}
+                        data={mailBox.mailBox}
+                        selected={mailBox.currentMail}
                         onSelect={(mail) => {
+                            let action2 = "GetEmail"
+                            if (mailBox.currentFilter.name == "Sent") {
+                                action2 = "GetSentEmail"
+                            }
                             if (!mail.read) {
                                 dispatchMailBox({
                                     action: "Read",
-                                    payload: mail.uidl,
+                                    id: mail.id,
+                                }).then(() =>
+                                    dispatchMailBox({
+                                        action: action2 as any,
+                                        id: mail.id,
+                                    }),
+                                )
+                            } else {
+                                dispatchMailBox({
+                                    action: action2 as any,
+                                    id: mail.id,
                                 })
                             }
-                            setSelectedMail(mail)
                         }}
                     />
 
@@ -138,7 +161,7 @@ export default function EmailContent() {
                         open={open}
                         isReply={isReply}
                         isForward={isForward}
-                        mail={selectedMail}
+                        mail={mailBox.currentMail}
                         onClose={() => {
                             setOpen(false)
                             setIsReply(false)
@@ -154,17 +177,25 @@ export default function EmailContent() {
                 >
                     <div className="flex flex-grow">
                         <MailContent
-                            mail={selectedMail}
+                            mail={mailBox.currentMail}
                             replyMail={() => {
                                 setIsReply(true)
                                 setOpen(true)
                                 setIsForward(false)
                             }}
                             deleteMail={() => {
-                                if (selectedMail) {
+                                if (!mailBox.currentMail) {
+                                    return
+                                }
+                                if (mailBox.currentMail.uidl.length) {
                                     dispatchMailBox({
                                         action: "Delete",
-                                        payload: selectedMail.uidl,
+                                        id: mailBox.currentMail.id,
+                                    })
+                                } else {
+                                    dispatchMailBox({
+                                        action: "DeleteSend",
+                                        id: mailBox.currentMail.id,
                                     })
                                 }
                             }}
@@ -180,7 +211,12 @@ export default function EmailContent() {
             <EditFilter
                 open={!!editFilter}
                 onClose={() => toggleEditFilter(undefined)}
-                setFilter={setSelectedFilter}
+                setFilter={(name) =>
+                    dispatchMailBox({
+                        action: "Get",
+                        filter: config.filters.find((val) => val.name == name),
+                    })
+                }
                 filter={editFilter!}
             />
             <Snackbar

@@ -29,6 +29,14 @@ export class MailBuilder {
         return [...this.#to, ...this.#cc, ...this.#bcc]
     }
 
+    getSubject() {
+        return this.#subject
+    }
+
+    getTextContent() {
+        return this.#content?.innerText ?? ""
+    }
+
     addSender(sender: string) {
         this.#sender = sender
         return this

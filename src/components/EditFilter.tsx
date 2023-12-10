@@ -53,10 +53,11 @@ export default function AddFilter({
         const tmp = setTimeout(() => {
             if (
                 config.filters.findIndex(
-                    (val) => val.name == filterName.at(-1),
+                    (val) => val.name == filterName,
                 ) != -1 ||
-                filterName.at(-1) == "Inbox" ||
-                filterName.at(-1) == "Sent"
+                filterName == "Inbox" ||
+                filterName == "Sent" ||
+                filterName == "All"
             ) {
                 setError(true)
             } else {

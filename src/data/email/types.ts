@@ -19,7 +19,14 @@ export type Email = {
     read: boolean
 }
 
-export type FilteredMailBox = { [key: string]: Email[] }
+export type EmailMeta = {
+    id: number,
+    sentTime: Date,
+    sender: string,
+    subject: string,
+    preview: string,
+    read: boolean,
+}
 
 export type RawEmail = {
     id: number

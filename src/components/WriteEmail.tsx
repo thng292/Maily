@@ -25,7 +25,7 @@ interface WriteEmailProps {
     onClose: () => void
     isReply: boolean
     isForward: boolean
-    mail?: Email
+    mail: Email | null
 }
 
 const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
@@ -72,7 +72,7 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
             if (attatchments) {
                 mail.addAttachment(attatchments)
             }
-            dispatchMailBox({ action: "Send", payload: mail })
+            dispatchMailBox({ action: "Send", email: mail })
             setSending(true)
         }, [value, receiver, config, dispatchMailBox])
 

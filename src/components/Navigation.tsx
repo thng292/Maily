@@ -5,7 +5,7 @@ import OutboxRoundedIcon from "@mui/icons-material/OutboxRounded"
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined"
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined"
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded"
-
+import AllInboxIcon from "@mui/icons-material/AllInbox"
 import {
     Box,
     IconButton,
@@ -33,7 +33,7 @@ export default function Navigation({
     editFilter,
 }: {
     filter: string[]
-    setFilter: React.Dispatch<React.SetStateAction<string>>
+    setFilter: (name: string) => void
     deleteFilter: (filterName: string) => void
     editFilter: (filterName: string) => void
     currentFilter: string
@@ -73,6 +73,17 @@ export default function Navigation({
                                     <OutboxRoundedIcon fontSize="small" />
                                 </ListItemDecorator>
                                 <ListItemContent>Sent</ListItemContent>
+                            </ListItemButton>
+                        </ListItem>
+                        <ListItem>
+                            <ListItemButton
+                                selected={currentFilter == "All"}
+                                onClick={() => setFilter("All")}
+                            >
+                                <ListItemDecorator>
+                                    <AllInboxIcon fontSize="small" />
+                                </ListItemDecorator>
+                                <ListItemContent>All</ListItemContent>
                             </ListItemButton>
                         </ListItem>
                     </List>

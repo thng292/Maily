@@ -1,4 +1,5 @@
 import { Email } from "@/data/email"
+import { EmailMeta } from "@/data/email/types"
 import {
     List,
     listItemButtonClasses,
@@ -17,9 +18,9 @@ export default function EmailList({
     selected,
     onSelect,
 }: {
-    data?: Email[]
-    selected?: Email
-    onSelect: (mail: Email) => void
+    data: EmailMeta[]
+    selected: Email | null
+    onSelect: (mail: EmailMeta) => void
 }) {
     return (
         <List
@@ -36,8 +37,8 @@ export default function EmailList({
                 <React.Fragment key={index}>
                     <ListItem>
                         <ListItemButton
-                            sx={{ p: 2 }}
-                            selected={item.uidl == selected?.uidl}
+                            // sx={{ p: 2 }}
+                            selected={item.id == selected?.id}
                             onClick={() => onSelect(item)}
                         >
                             <div className="w-full">
@@ -72,12 +73,19 @@ export default function EmailList({
                                 </div>
                                 <Typography
                                     level="title-sm"
-                                    sx={{ mb: 0.5 }}
                                     noWrap
                                     maxWidth={"80%"}
                                     height={"1lh"}
                                 >
                                     {item.subject}
+                                </Typography>
+                                <Typography
+                                    level="body-sm"
+                                    noWrap
+                                    maxWidth={"80%"}
+                                    height={"1lh"}
+                                >
+                                    {item.preview}
                                 </Typography>
                             </div>
                         </ListItemButton>

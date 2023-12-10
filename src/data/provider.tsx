@@ -1,4 +1,4 @@
-import { useMailBoxReducer, type FilteredMailBox } from "./email"
+import { useMailBoxReducer } from "./email"
 import { useConfig, DefaultConfig } from "./config"
 import { createContext, ReactNode } from "react"
 
@@ -10,13 +10,14 @@ export const MailBoxContext = createContext<
     ReturnType<typeof useMailBoxReducer>
 >([
     {
-        mailBox: {},
+        mailBox: [],
+        currentFilter: { name: "Inbox" },
+        currentMail: null,
         state: "loading",
         error: "",
         page: 1,
-        sentPage: 1,
     },
-    (_) => {},
+    async (_) => {},
 ])
 
 export function DataProvider({ children }: { children: ReactNode }) {

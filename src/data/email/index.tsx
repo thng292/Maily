@@ -1,16 +1,14 @@
-import { Dispatch, useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Config, Filter } from "../config"
-import {
-    type Email,
-    type FilteredMailBox,
-    type Attachment,
-    RawEmail,
-} from "./types"
+import { type Email, type Attachment, RawEmail, EmailMeta } from "./types"
 import { MailBuilder } from "./MailBuilder"
 import {
     setupDB,
-    addRawEmail,
+    addEmail,
     sendEmail,
+    getEmail,
+    getInbox,
+    getSentEmail,
     deleteEmail,
     deleteSentEmail,
     findUIDL,
@@ -23,94 +21,46 @@ import {
     deleteNotIn,
 } from "./db"
 import { POP3Wrapper, SMTPWrapper, UIDLResult } from "@/socket"
-import { getDate, parseEmail } from "./parser"
+import { parseEmail } from "./parser"
+
+type AllFilter = Filter | { name: "All" } | { name: "Inbox" } | { name: "Sent" }
 
 type MailBoxState = {
-    mailBox: FilteredMailBox
+    mailBox: EmailMeta[]
+    currentFilter: AllFilter
+    currentMail: Email | null
     state: "loading" | "success" | "failed"
     error: string | null
     page: number
-    sentPage: number
 }
 
-const EActionKind = {
-    Send: "Send",
-    Delete: "Delete",
-    DeleteSend: "DeleteSend",
-    Refresh: "Refresh",
-    Get: "Get",
-    More: "More",
-    MoreSent: "MoreSent",
-} as const
-
-type ActionKind = (typeof EActionKind)[keyof typeof EActionKind]
-
 type ActionType =
-    | { action: "Send"; payload: MailBuilder }
-    | { action: "Delete"; payload: string }
     | { action: "Refresh" }
-    | { action: "Get" }
+    | {
+          action: "Get"
+          filter?: AllFilter
+      }
+    | { action: "GetEmail"; id: number }
+    | { action: "GetSentEmail"; id: number }
+    | { action: "Send"; email: MailBuilder }
+    | { action: "Delete"; id: number }
+    | { action: "DeleteSend"; id: number }
     | { action: "More" }
-    | { action: "MoreSent" }
-    | { action: "Read"; payload: string }
-    | { action: "Unread"; payload: string }
-    | { action: "DeleteSend"; payload: number[] }
+    | { action: "Read"; id: number }
+    | { action: "Unread"; id: number }
 // & { onSuccess?: () => void; onError?: (err: string) => void }
 
 function useMailBoxReducer(config: Config) {
     const [mailBoxState, setMailBoxState] = useState<MailBoxState>({
-        mailBox: {},
+        mailBox: [],
+        currentFilter: {
+            name: "Inbox",
+        },
+        currentMail: null,
         state: "loading",
         error: null,
         page: 1,
-        sentPage: 1,
     })
-
-    const filterAndAdd = useCallback(
-        (
-            mails: Email[] | null,
-            sents: Email[] | null,
-            eraseOld: boolean,
-            config: Config,
-        ) => {
-            const old: FilteredMailBox = {}
-            if (mails != null) {
-                if (eraseOld) {
-                    for (let filter of config.filters) {
-                        old[filter.name] = []
-                    }
-                    old["Inbox"] = []
-                    old["Sent"] = []
-                } else {
-                    for (let filter of config.filters) {
-                        old[filter.name] = [
-                            ...mailBoxState.mailBox[filter.name],
-                        ]
-                    }
-                    old["Inbox"] = [...mailBoxState.mailBox["Inbox"]]
-                    old["Sent"] = [...mailBoxState.mailBox["Sent"]]
-                }
-                for (let i = 0; i < mails.length; i++) {
-                    let found = false
-                    for (let filter of config.filters) {
-                        if (match(mails[i], filter)) {
-                            old[filter.name].push(mails[i])
-                            found = true
-                            break
-                        }
-                    }
-                    if (!found) {
-                        old["Inbox"].push(mails[i])
-                    }
-                }
-            }
-            if (sents != null) {
-                old["Sent"].push(...sents)
-            }
-            return old
-        },
-        [config],
-    )
 
     const setFail = useCallback(
         (e: string) => {
@@ -126,6 +76,7 @@ function useMailBoxReducer(config: Config) {
 
     const mailBoxDispatch = useCallback(
         async (action: ActionType) => {
+            console.log("Dispatch:", action)
             if (!config.server.length) {
                 return
             }
@@ -143,7 +94,6 @@ function useMailBoxReducer(config: Config) {
                             await POP3.connect(config.server, config.POP3port)
                             await POP3.USER(config.username)
                             await POP3.PASS(config.password)
-                            let newMails: RawEmail[] = []
                             const uids = await POP3.UIDL()
                             await deleteNotIn(uids.map((val) => val.uid))
                             console.log(uids)
@@ -155,17 +105,18 @@ function useMailBoxReducer(config: Config) {
                                         content: await POP3.RETR(uid.id),
                                         read: false,
                                     } satisfies RawEmail
-                                    newMails.push(mail)
-                                    await addRawEmail(
-                                        mail,
-                                        getDate(mail.content),
+                                    await addEmail(
+                                        parseEmail(mail),
+                                        mail.content,
                                     )
                                 } else {
                                     updateListID(uid.uid, uid.id)
                                 }
                             }
                             SaveDB()
-                            mailBoxDispatch({ action: "Get" })
+                            mailBoxDispatch({
+                                action: "Get",
+                            })
                         } catch (e) {
                             setFail(String(e))
                         }
@@ -175,16 +126,16 @@ function useMailBoxReducer(config: Config) {
                 case "Send":
                     {
                         const SMTP = new SMTPWrapper()
-                        const mail = action.payload.toString()
+                        const mail = action.email.toString()
                         SMTP.send(
                             config.server,
                             config.SMTPport,
-                            action.payload.getSender(),
-                            action.payload.getReceivers(),
+                            action.email.getSender(),
+                            action.email.getReceivers(),
                             mail,
                         )
                             .then(() => {
-                                sendEmail(mail)
+                                sendEmail(action.email, mail)
                                     .then(() => {
                                         mailBoxDispatch({
                                             action: "Get",
@@ -197,7 +148,7 @@ function useMailBoxReducer(config: Config) {
                     break
                 case "Delete":
                     {
-                        const listID = await getListID(action.payload)
+                        const listID = await getListID(action.id)
                         const POP3 = new POP3Wrapper()
                         try {
                             await POP3.connect(config.server, config.POP3port)
@@ -208,7 +159,13 @@ function useMailBoxReducer(config: Config) {
                                 setFail(e)
                             })
                             POP3.destroy()
-                            deleteEmail(action.payload).then(() => {
+                            deleteEmail(action.id).then(() => {
+                                setMailBoxState((old) => ({
+                                    ...old,
+                                    currentMail: null,
+                                    state: "success",
+                                    error: null,
+                                }))
                                 mailBoxDispatch({ action: "Get" })
                             })
                         } catch (e) {
@@ -217,33 +174,53 @@ function useMailBoxReducer(config: Config) {
                     }
                     break
                 case "DeleteSend":
-                    deleteSentEmail(action.payload)
+                    deleteSentEmail(action.id)
                         .then(() => {
+                            setMailBoxState((old) => ({
+                                ...old,
+                                currentMail: null,
+                            }))
                             mailBoxDispatch({ action: "Get" })
                         })
                         .catch(setFail)
                     break
                 case "Get":
                     try {
-                        const rawMails = await getEmails(25, 0)
-                        const parsedMails = rawMails.map((rawMail) =>
-                            parseEmail(rawMail),
-                        )
-                        const sentMails = await getSentEmails(25, 0).then(
-                            (data) => data.map((value) => parseEmail(value)),
-                        )
-                        const newState = filterAndAdd(
-                            parsedMails,
-                            sentMails,
-                            true,
-                            config,
-                        )
+                        const newFilter =
+                            action.filter ?? mailBoxState.currentFilter
+                        let rawMails: EmailMeta[] = []
+                        switch (newFilter.name) {
+                            case "All":
+                                rawMails = await getEmails(1, {
+                                    name: "",
+                                    rule: {
+                                        mail: [],
+                                        subject: [],
+                                        content: [],
+                                    },
+                                })
+                                break
+                            case "Inbox":
+                                rawMails = await getInbox(1, config.filters)
+                                break
+                            case "Sent":
+                                rawMails = await getSentEmails(1)
+                                break
+                            default:
+                                rawMails = await getEmails(
+                                    1,
+                                    newFilter as Filter,
+                                )
+                                break
+                        }
+                        console.log(rawMails, newFilter)
                         setMailBoxState((old) => ({
-                            mailBox: newState,
+                            mailBox: rawMails,
+                            currentFilter: newFilter,
                             state: "success",
                             error: null,
                             page: 1,
-                            sentPage: 1,
+                            currentMail: old.currentMail,
                         }))
                     } catch (e) {
                         setFail(String(e))
@@ -251,61 +228,46 @@ function useMailBoxReducer(config: Config) {
                     break
                 case "More":
                     try {
-                        const rawMails = await getEmails(
-                            mailBoxState.page * 25,
-                            (mailBoxState.page - 1) * 25,
-                        )
-                        const parsedMails = rawMails.map((rawMail, index) => {
-                            const parsed = parseEmail(rawMail)
-                            return parsed
-                        })
-                        const newState = filterAndAdd(
-                            parsedMails,
-                            null,
-                            false,
-                            config,
-                        )
-                        setMailBoxState((old) => ({
-                            mailBox: newState,
+                        let rawMails: EmailMeta[]
+                        switch (mailBoxState.currentFilter.name) {
+                            case "All":
+                                rawMails = await getEmails(1, {
+                                    name: "",
+                                    rule: {
+                                        mail: [],
+                                        subject: [],
+                                        content: [],
+                                    },
+                                })
+                                break
+                            case "Inbox":
+                                rawMails = await getInbox(1, config.filters)
+                                break
+                            case "Sent":
+                                rawMails = await getSentEmails(1)
+                                break
+                            default:
+                                rawMails = await getEmails(
+                                    1,
+                                    mailBoxState.currentFilter as Filter,
+                                )
+                                break
+                        }
+                        setMailBoxState({
+                            mailBox: rawMails,
+                            currentFilter: mailBoxState.currentFilter,
                             state: "success",
                             error: null,
-                            page: old.page + 1,
-                            sentPage: 1,
-                        }))
-                    } catch (e) {
-                        setFail(String(e))
-                    }
-                    break
-                case "MoreSent":
-                    try {
-                        const rawMails = await getSentEmails(
-                            mailBoxState.page * 25,
-                            (mailBoxState.page - 1) * 25,
-                        )
-                        const parsedMails = rawMails.map((rawMail, index) => {
-                            const parsed = parseEmail(rawMail)
-                            return parsed
+                            page: mailBoxState.page + 1,
+                            currentMail: mailBoxState.currentMail,
                         })
-                        const newState = filterAndAdd(
-                            null,
-                            parsedMails,
-                            false,
-                            config,
-                        )
-                        setMailBoxState((old) => ({
-                            mailBox: newState,
-                            state: "success",
-                            error: null,
-                            page: old.page + 1,
-                            sentPage: 1,
-                        }))
                     } catch (e) {
                         setFail(String(e))
                     }
                     break
                 case "Read":
                     try {
-                        await read(action.payload)
+                        await read(action.id)
                     } catch (e) {
                         setFail(String(e))
                     }
@@ -313,11 +275,37 @@ function useMailBoxReducer(config: Config) {
                     break
                 case "Unread":
                     try {
-                        await read(action.payload)
+                        await read(action.id)
                     } catch (e) {
                         setFail(String(e))
                     }
                     mailBoxDispatch({ action: "Get" })
+                    break
+                case "GetEmail":
+                    try {
+                        const email = await getEmail(action.id)
+                        setMailBoxState((old) => ({
+                            ...old,
+                            currentMail: email,
+                            state: "success",
+                            error: null,
+                        }))
+                    } catch (e) {
+                        setFail(String(e))
+                    }
+                    break
+                case "GetSentEmail":
+                    try {
+                        const email = await getSentEmail(action.id)
+                        setMailBoxState((old) => ({
+                            ...old,
+                            currentMail: email,
+                            state: "success",
+                            error: null,
+                        }))
+                    } catch (e) {
+                        setFail(String(e))
+                    }
                     break
                 default:
                     break
@@ -345,32 +333,10 @@ function useMailBoxReducer(config: Config) {
     }, [config])
 
     return [mailBoxState, mailBoxDispatch] as [
-        MailBoxState,
-        Dispatch<ActionType>,
+        typeof mailBoxState,
+        typeof mailBoxDispatch,
     ]
 }
 
-function match(mail: Email, filter: Filter): boolean {
-    if (filter.rule.mail.length)
-        for (let str of filter.rule.mail) {
-            if (mail.sender.includes(str)) {
-                return true
-            }
-        }
-    if (filter.rule.subject.length)
-        for (let str of filter.rule.subject) {
-            if (mail.subject.includes(str)) {
-                return true
-            }
-        }
-    if (filter.rule.content.length)
-        for (let str of filter.rule.content) {
-            if (mail.content.innerText.includes(str)) {
-                return true
-            }
-        }
-    return false
-}
-
 export { useMailBoxReducer, MailBuilder }
-export type { ActionType, ActionKind, Email, FilteredMailBox, Attachment }
+export type { ActionType, Email, Attachment, AllFilter }

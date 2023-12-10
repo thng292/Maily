@@ -1,11 +1,15 @@
 import fs from "node:fs"
-import { type RawEmail } from "./types"
+import { type Email, type EmailMeta } from "./types"
+import { Filter } from "../config"
+import { parseEmail } from "./parser"
+import { MailBuilder } from "./MailBuilder"
 
 const dbPath = "email.sqlite"
+const pageSize = 50
 fs.writeFileSync(dbPath, "", { flag: "a+" })
 const filebuffer = fs.readFileSync(dbPath)
 
-type SuccessCB_T = (mails?: [number, string, string, number][]) => void
+type SuccessCB_T = (mails?: (number | string)[][]) => void
 type ErrorCB_T = (e: string) => void
 
 let successCb: (SuccessCB_T | undefined)[] = []
@@ -36,8 +40,8 @@ dbWorker.onmessage = () => {
     console.log("Database opened")
     dbWorker.onmessage = (event) => {
         console.log(event.data)
-        console.log(event.data)
         if (event.data.id == saveDBId) {
+            console.log("Saved")
             fs.writeFile(dbPath, event.data.buffer, (e) => {
                 if (e) console.error(e)
             })
@@ -84,6 +88,9 @@ export function setupDB(): Promise<void> {
                 listid INTEGER NOT NULL,
                 uidl TEXT UNIQUE NOT NULL,
                 timestamp TIMESTAMP NOT NULL DEFAULT (DATETIME('now')),
+                sender TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                preview TEXT NOT NULL,
                 content TEXT NOT NULL,
                 read BOOLEAN NOT NULL DEFAULT FALSE
             );
@@ -92,6 +99,9 @@ export function setupDB(): Promise<void> {
             CREATE TABLE IF NOT EXISTS Sent (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TIMESTAMP NOT NULL DEFAULT (DATETIME('now')),
+                receiver TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                preview TEXT NOT NULL,
                 content TEXT NOT NULL
             );`,
         })
@@ -100,49 +110,53 @@ export function setupDB(): Promise<void> {
     })
 }
 
-export function addRawEmail(rawEmail: RawEmail, date?: Date): Promise<void> {
-    console.log(rawEmail)
+export function addEmail(email: Email, rawContent: string): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
-        let query = ""
-        console.log("Not undefined", date)
-        if (date != undefined) {
-            query = `INSERT INTO Inbox (listid, uidl, timestamp, content) VALUES ($id, $uidl, $date, $content)`
-        } else {
-            query = `INSERT INTO Inbox (listid, uidl, content) VALUES ($id, $uidl, $content)`
-        }
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: query,
+            sql: `INSERT INTO Inbox 
+                  (listid, uidl, timestamp, sender, subject, preview, content)
+                  VALUES 
+                  ($listid, $uidl, $date, $sender, $subject, $preview, $content)`,
             params: {
-                $id: rawEmail.id,
-                $uidl: rawEmail.uidl,
-                $content: rawEmail.content,
-                $date: date?.toISOString(),
+                $listid: email.id,
+                $uidl: email.uidl,
+                $date: email.sentTime?.toISOString(),
+                $sender: email.sender,
+                $subject: email.subject,
+                $preview: email.content.innerText,
+                $content: rawContent,
             },
         })
         successCb[id] = () => {
-            console.log(id, addRawEmail.name)
+            console.log(id, addEmail.name, arguments)
             onSuccess()
         }
-        // errorCb[id] = onError
         errorCb[id] = (e) => {
-            console.log(id, addRawEmail.name, e)
+            console.log(id, addEmail.name, arguments, e)
             onError(e)
         }
     })
 }
 
-export function sendEmail(content: string): Promise<void> {
+export function sendEmail(
+    email: MailBuilder,
+    rawContent: string,
+): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `INSERT INTO Sent (content) VALUES ($content)`,
+            sql: `INSERT INTO Sent (receiver, subject, preview, content) 
+                  VALUES ($receiver, $subject, $preview, $content)`,
             params: {
-                $content: content,
+                $receiver: email.getReceivers().join(", "),
+                $subject: email.getSubject(),
+                $preview: email.getTextContent(),
+                $content: rawContent,
             },
         })
         successCb[id] = () => {
@@ -157,15 +171,15 @@ export function sendEmail(content: string): Promise<void> {
     })
 }
 
-export function deleteEmail(uidl: string): Promise<void> {
+export function deleteEmail(emailID: number): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `DELETE FROM Inbox WHERE uidl = $id`,
+            sql: `DELETE FROM Inbox WHERE id = $id`,
             params: {
-                $id: uidl,
+                $id: emailID,
             },
         })
         successCb[id] = () => {
@@ -179,13 +193,16 @@ export function deleteEmail(uidl: string): Promise<void> {
     })
 }
 
-export function deleteSentEmail(emailIDs: number[]): Promise<void> {
+export function deleteSentEmail(emailID: number): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `DELETE FROM Sent WHERE id IN (${emailIDs.join(",")})`,
+            sql: `DELETE FROM Sent WHERE id = $id)`,
+            params: {
+                $id: emailID,
+            },
         })
         successCb[id] = () => {
             console.log(id, sendEmail.name)
@@ -198,27 +215,64 @@ export function deleteSentEmail(emailIDs: number[]): Promise<void> {
     })
 }
 
-export function getEmails(limit: number, offset: number): Promise<RawEmail[]> {
+export function getEmails(page: number, filter: Filter): Promise<EmailMeta[]> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
+        let where: string[] = []
+        where.push(
+            filter.rule.mail
+                .map((val) => `sender LIKE '%${val}%'`)
+                .filter((val) => val.length)
+                .join(" OR "),
+        )
+        where.push(
+            filter.rule.subject
+                .map((val) => `subject LIKE '%${val}%'`)
+                .filter((val) => val.length)
+                .join(" OR "),
+        )
+        where.push(
+            filter.rule.content
+                .map((val) => `preview LIKE '%${val}%'`)
+                .filter((val) => val.length)
+                .join(" OR "),
+        )
+        const whereQuery = where.filter((val) => val.length).join(" OR ")
+        console.log(
+            "Query",
+            `SELECT id, timestamp, sender, subject, preview, read 
+            FROM Inbox 
+            ${whereQuery.trim().length ? `WHERE ${whereQuery}` : ""}
+            ORDER BY DATETIME(Inbox.timestamp) DESC 
+            LIMIT $limit OFFSET $offset`,
+        )
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `SELECT id, uidl, content, read FROM Inbox ORDER BY DATETIME(Inbox.timestamp) DESC LIMIT $limit OFFSET $offset`,
+            sql: `SELECT id, timestamp, sender, subject, preview, read 
+                  FROM Inbox 
+                  ${whereQuery.trim().length ? `WHERE ${whereQuery}` : ""}
+                  ORDER BY DATETIME(Inbox.timestamp) DESC 
+                  LIMIT $limit OFFSET $offset`,
             params: {
-                $limit: limit,
-                $offset: offset,
+                $limit: pageSize,
+                $offset: (page - 1) * pageSize,
             },
         })
-        successCb[id] = (data?: [number, string, string, number][]) => {
+        successCb[id] = (data) => {
             console.log(id, getEmails.name, data)
             onSuccess(
-                data!.map((val) => ({
-                    id: val[0],
-                    uidl: val[1],
-                    content: val[2],
-                    read: val[3] == 1,
-                })),
+                data?.map(
+                    (val) =>
+                        ({
+                            id: Number(val[0]),
+                            sentTime: new Date(val[1]),
+                            sender: String(val[2]),
+                            subject: String(val[3]),
+                            preview: String(val[4]),
+                            read: val[5] != 0,
+                        } satisfies EmailMeta),
+                ) ?? [],
             )
         }
         // errorCb[id] = onError
@@ -229,33 +283,36 @@ export function getEmails(limit: number, offset: number): Promise<RawEmail[]> {
     })
 }
 
-export function getSentEmails(
-    limit: number,
-    offset: number,
-): Promise<RawEmail[]> {
+export function getSentEmails(page: number): Promise<EmailMeta[]> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `SELECT id, content FROM Sent ORDER BY DATETIME(Sent.timestamp) DESC LIMIT $limit OFFSET $offset`,
+            sql: `SELECT id, timestamp, receiver, subject, preview FROM Sent 
+                  ORDER BY DATETIME(Sent.timestamp) DESC 
+                  LIMIT $limit OFFSET $offset`,
             params: {
-                $limit: limit,
-                $offset: offset,
+                $limit: pageSize,
+                $offset: (page - 1) * pageSize,
             },
         })
-        successCb[id] = ((data?: [number, string, number][]) => {
+        successCb[id] = (data) => {
             console.log(id, getSentEmails.name, data)
             onSuccess(
-                data!.map((val) => ({
-                    id: val[0],
-                    uidl: "",
-                    content: val[1],
-                    read: true,
-                })),
+                data?.map(
+                    (val) =>
+                        ({
+                            id: Number(val[0]),
+                            sentTime: new Date(val[1]),
+                            sender: String(val[2]),
+                            subject: String(val[3]),
+                            preview: String(val[4]),
+                            read: true,
+                        } satisfies EmailMeta),
+                ) ?? [],
             )
-        }) as unknown as SuccessCB_T
-
+        }
         // errorCb[id] = onError
         errorCb[id] = (e) => {
             console.log(id, getSentEmails.name, e)
@@ -290,10 +347,10 @@ export function countMail(): Promise<number> {
             action: "exec",
             sql: `SELECT COUNT(*) FROM Inbox`,
         })
-        successCb[id] = ((res: [[number]]) => {
+        successCb[id] = (res) => {
             console.log(id, countMail.name, res)
-            onSuccess(res[0][0])
-        }) as unknown as SuccessCB_T
+            onSuccess(Number(res?.at(0)?.at(0) ?? 0))
+        }
         // errorCb[id] = onError
         errorCb[id] = (e) => {
             console.log(id, countMail.name, e)
@@ -313,7 +370,7 @@ export function findUIDL(uidl: string): Promise<boolean> {
                 $uidl: uidl,
             },
         })
-        successCb[id] = (rawEmail?: [number, string, string, number][]) => {
+        successCb[id] = (rawEmail) => {
             console.log(id, findUIDL.name, rawEmail)
             onSuccess(rawEmail?.length != 0)
         }
@@ -325,15 +382,15 @@ export function findUIDL(uidl: string): Promise<boolean> {
     })
 }
 
-export function read(uidl: string): Promise<void> {
+export function read(emailID: number): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `UPDATE Inbox SET read = TRUE WHERE uidl = $id`,
+            sql: `UPDATE Inbox SET read = TRUE WHERE id = $id`,
             params: {
-                $id: uidl,
+                $id: emailID,
             },
         })
         successCb[id] = () => {
@@ -347,15 +404,15 @@ export function read(uidl: string): Promise<void> {
         }
     })
 }
-export function unread(uidl: string): Promise<void> {
+export function unread(emailID: number): Promise<void> {
     return new Promise((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `UPDATE Inbox SET read = FALSE WHERE uidl = $id`,
+            sql: `UPDATE Inbox SET read = FALSE WHERE id = $id`,
             params: {
-                $id: uidl,
+                $id: emailID,
             },
         })
         successCb[id] = () => {
@@ -394,21 +451,21 @@ export function updateListID(uidl: string, listID: number) {
     })
 }
 
-export function getListID(uidl: string) {
+export function getListID(emailID: number) {
     return new Promise<number>((onSuccess, onError) => {
         const id = getQueryID()
         dbWorker.postMessage({
             id: id,
-            action: "get",
-            sql: `SELECT listid FROM Inbox WHERE uidl = $uid`,
+            action: "exec",
+            sql: `SELECT listid FROM Inbox WHERE id = $uid`,
             params: {
-                $uid: uidl,
+                $uid: emailID,
             },
         })
-        successCb[id] = ((res: [number]) => {
+        successCb[id] = (res) => {
             console.log(id, getListID.name)
-            onSuccess(res[0])
-        }) as unknown as SuccessCB_T
+            onSuccess(Number(res?.at(0)?.at(0)))
+        }
         // errorCb[id] = onError
         errorCb[id] = (e) => {
             console.log(id, read.name, e)
@@ -434,6 +491,174 @@ export function deleteNotIn(uidls: string[]) {
         // errorCb[id] = onError
         errorCb[id] = (e) => {
             console.log(id, read.name, e)
+            onError(e)
+        }
+    })
+}
+
+export function getEmail(emailID: number): Promise<Email> {
+    return new Promise((onRes, onErr) => {
+        const id = getQueryID()
+        dbWorker.postMessage({
+            id: id,
+            action: "exec",
+            sql: `SELECT listid, uidl, content, read FROM Inbox WHERE id = $id`,
+            params: {
+                $id: emailID,
+            },
+        })
+        successCb[id] = (rows) => {
+            console.log(id, getEmail.name)
+            if (!rows) {
+                return onRes({
+                    id: 0,
+                    messageId: "",
+                    uidl: "",
+                    replyTo: null,
+                    sentTime: new Date(),
+                    sender: "",
+                    receiver: [],
+                    CC: [],
+                    subject: "",
+                    content: document.createElement("p"),
+                    attachment: [],
+                    read: false,
+                })
+            }
+            const data = rows[0]
+            onRes(
+                parseEmail({
+                    id: Number(data[0]),
+                    uidl: String(data[1]),
+                    content: String(data[2]),
+                    read: data[3] != 0,
+                }),
+            )
+        }
+        // errorCb[id] = onError
+        errorCb[id] = (e) => {
+            console.log(id, getEmail.name, e)
+            onErr(e)
+        }
+    })
+}
+
+export function getSentEmail(emailID: number): Promise<Email> {
+    return new Promise((onRes, onErr) => {
+        const id = getQueryID()
+        dbWorker.postMessage({
+            id: id,
+            action: "exec",
+            sql: `SELECT id, content FROM Sent WHERE id = $id`,
+            params: {
+                $id: emailID,
+            },
+        })
+        successCb[id] = (rows) => {
+            console.log(id, getEmail.name)
+            if (!rows) {
+                return onRes({
+                    id: 0,
+                    messageId: "",
+                    uidl: "",
+                    replyTo: null,
+                    sentTime: new Date(),
+                    sender: "",
+                    receiver: [],
+                    CC: [],
+                    subject: "",
+                    content: document.createElement("p"),
+                    attachment: [],
+                    read: false,
+                })
+            }
+            const data = rows[0]
+            onRes(
+                parseEmail({
+                    id: Number(data[0]),
+                    uidl: "",
+                    content: String(data[1]),
+                    read: true,
+                }),
+            )
+        }
+        // errorCb[id] = onError
+        errorCb[id] = (e) => {
+            console.log(id, getSentEmail.name, e)
+            onErr(e)
+        }
+    })
+}
+
+export function getInbox(
+    page: number,
+    otherFilters: Filter[],
+): Promise<EmailMeta[]> {
+    return new Promise((onSuccess, onError) => {
+        const id = getQueryID()
+        let where: string[] = []
+        for (let filter of otherFilters) {
+            where.push(
+                filter.rule.mail
+                    .map((val) => `sender LIKE '%${val}%'`)
+                    .filter((val) => val.length)
+                    .join(" OR "),
+            )
+            where.push(
+                filter.rule.subject
+                    .map((val) => `subject LIKE '%${val}%'`)
+                    .filter((val) => val.length)
+                    .join(" OR "),
+            )
+            where.push(
+                filter.rule.content
+                    .map((val) => `preview LIKE '%${val}%'`)
+                    .filter((val) => val.length)
+                    .join(" OR "),
+            )
+        }
+
+        const whereQuery = where.filter((val) => val.length).join(" OR ")
+        console.log(
+            "Query",
+            `SELECT id, timestamp, sender, subject, preview, read 
+            FROM Inbox 
+            ${whereQuery.trim().length ? `WHERE NOT (${whereQuery})` : ""}
+            ORDER BY DATETIME(Inbox.timestamp) DESC 
+            LIMIT $limit OFFSET $offset`,
+        )
+        dbWorker.postMessage({
+            id: id,
+            action: "exec",
+            sql: `SELECT id, timestamp, sender, subject, preview, read 
+                  FROM Inbox 
+                  ${whereQuery.trim().length ? `WHERE NOT (${whereQuery})` : ""}
+                  ORDER BY DATETIME(Inbox.timestamp) DESC 
+                  LIMIT $limit OFFSET $offset`,
+            params: {
+                $limit: pageSize,
+                $offset: (page - 1) * pageSize,
+            },
+        })
+        successCb[id] = (data) => {
+            console.log(id, getInbox.name, data)
+            onSuccess(
+                data?.map(
+                    (val) =>
+                        ({
+                            id: Number(val[0]),
+                            sentTime: new Date(val[1]),
+                            sender: String(val[2]),
+                            subject: String(val[3]),
+                            preview: String(val[4]),
+                            read: val[5] != 0,
+                        } satisfies EmailMeta),
+                ) ?? [],
+            )
+        }
+        // errorCb[id] = onError
+        errorCb[id] = (e) => {
+            console.log(id, getInbox.name, e)
             onError(e)
         }
     })

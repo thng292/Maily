@@ -23,7 +23,7 @@ export default function EmailContent({
     forwardMail,
     replyMail,
 }: {
-    mail?: Email
+    mail: Email | null
     deleteMail: () => void
     forwardMail: () => void
     replyMail: () => void
