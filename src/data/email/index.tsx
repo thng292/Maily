@@ -46,26 +46,16 @@ const EActionKind = {
 type ActionKind = (typeof EActionKind)[keyof typeof EActionKind]
 
 type ActionType =
-    | {
-          action: "Send"
-          payload: MailBuilder
-      }
-    | {
-          action: "Delete"
-          payload: string
-      }
-    | {
-          action: "Refresh"
-      }
+    | { action: "Send"; payload: MailBuilder }
+    | { action: "Delete"; payload: string }
+    | { action: "Refresh" }
     | { action: "Get" }
     | { action: "More" }
     | { action: "MoreSent" }
     | { action: "Read"; payload: string }
     | { action: "Unread"; payload: string }
-    | {
-          action: "DeleteSend"
-          payload: number[]
-      } // & { onSuccess?: () => void; onError?: (err: string) => void }
+    | { action: "DeleteSend"; payload: number[] }
+// & { onSuccess?: () => void; onError?: (err: string) => void }
 
 function useMailBoxReducer(config: Config) {
     const [mailBoxState, setMailBoxState] = useState<MailBoxState>({

@@ -1,4 +1,6 @@
 import { Attachment } from "./types"
+const rfc2047 = require("rfc2047")
+const beautify = require("js-beautify/js").html
 
 export class MailBuilder {
     #sender: string
@@ -71,10 +73,10 @@ export class MailBuilder {
             ">"
         const date = "Date: " + new Date().toUTCString()
         const MIME_V = "MIME-Version: 1.0"
-        const from = this.#sender.length ? `From: <${this.#sender}>` : null
+        const from = this.#sender.length ? `From: ${this.#sender}` : null
         const to = this.#to.length ? `To: ${this.#to.join(", ")}` : null
         const cc = this.#cc.length ? `CC: ${this.#cc.join(", ")}` : null
-        const subject = `Subject: ${this.#subject}`
+        const subject = `Subject: ${rfc2047.encode(this.#subject)}`
         let textContent: string | null = null
 
         if (this.#content) {
@@ -89,7 +91,27 @@ export class MailBuilder {
             textContent =
                 "<!DOCTYPE html>\r\n<html>\r\n" +
                 tmp.innerHTML.replaceAll("\n", "\r\n") +
-                "\r\n</html>\r\n\r\n"
+                "\r\n</html>"
+            textContent =
+                beautify(textContent, {
+                    indent_size: "2",
+                    indent_char: " ",
+                    max_preserve_newlines: "-1",
+                    preserve_newlines: false,
+                    keep_array_indentation: false,
+                    break_chained_methods: false,
+                    indent_scripts: "separate",
+                    brace_style: "collapse",
+                    space_before_conditional: true,
+                    unescape_strings: false,
+                    jslint_happy: false,
+                    end_with_newline: false,
+                    wrap_line_length: "70",
+                    indent_inner_html: false,
+                    comma_first: false,
+                    e4x: false,
+                    indent_empty_lines: false,
+                }) + "\r\n\r\n"
         } else {
             this.#content = document.createElement("p")
             textContent = ""
@@ -102,10 +124,10 @@ export class MailBuilder {
         const fillContentIn = (addMimeMessage: boolean) => {
             let tmp = ""
             if (this.#content) {
-                tmp += `Content-Type: multipart/alternative; boundary="${mimeBoudary[1]}"\r\n`
+                tmp += `Content-Type: multipart/alternative;\r\n boundary="${mimeBoudary[1]}"\r\n`
                 if (addMimeMessage) {
                     tmp +=
-                        "\r\nthis is a multi-part message in MIME format.\r\n"
+                        "\r\nThis is a multi-part message in MIME format.\r\n"
                 }
                 tmp += "--" + mimeBoudary[1] + "\r\n"
                 tmp +=
@@ -122,8 +144,12 @@ export class MailBuilder {
             if (this.#attchments) {
                 for (let item of this.#attchments) {
                     tmp += "--" + mimeBoudary[0] + "\r\n"
-                    tmp += `Content-Type: ${item.mime}; name="${item.filename}"\r\n`
-                    tmp += `Content-Disposition: attachment; filename="${item.filename}"\r\n`
+                    tmp += `Content-Type: ${item.mime}; name="${rfc2047.encode(
+                        item.filename,
+                    )}"\r\n`
+                    tmp += `Content-Disposition: attachment; filename="${rfc2047.encode(
+                        item.filename,
+                    )}"\r\n`
                     tmp += "Content-Transfer-Encoding: base64\r\n\r\n"
                     for (let i = 0; i < item.contentBase64.length; i += 70) {
                         tmp += item.contentBase64.slice(i, i + 70) + "\r\n"

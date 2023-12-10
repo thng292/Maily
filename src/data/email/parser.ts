@@ -1,4 +1,5 @@
 import { type Email, type Attachment, type RawEmail } from "./types"
+const rfc2047 = require("rfc2047")
 
 export function getDate(rawMail: string) {
     const dateI = rawMail.indexOf("Date: ")
@@ -37,10 +38,11 @@ export function parseEmail(raw: RawEmail): Email {
         uidl: raw.uidl,
         replyTo: header["In-Reply-To"],
         sentTime: new Date(header["Date"]),
-        sender: header["From"] ?? "Unknown sender",
-        receiver: "To" in header ? header["To"].split(", ") : [],
+        sender: rfc2047.decode(header["From"]) ?? "Unknown sender",
+        receiver:
+            "To" in header ? rfc2047.decode(header["To"]).split(", ") : [],
         CC: "CC" in header ? header["CC"].split(", ") : [],
-        subject: header["Subject"] ?? "No Subject",
+        subject: rfc2047.decode(header["Subject"]) ?? "No Subject",
         attachment: [],
         read: raw.read,
     } as unknown as Email
@@ -105,7 +107,7 @@ function parseContentDisposition(raw: string): {
 } {
     // console.log(parseContentDisposition.name, arguments)
     let [pos, filename] = raw.split("; ")
-    filename = filename.split("=")[1].replaceAll('"', "")
+    filename = rfc2047.decode(filename.split("=")[1].replaceAll('"', ""))
     return { pos, filename }
 }
 
