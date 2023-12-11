@@ -1,6 +1,5 @@
 import { ConfigContext } from "@/data/provider"
 import { useContext, useEffect, useRef, useState } from "react"
-import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined"
 
 import {
     Button,
@@ -38,9 +37,8 @@ export default function AddFilter({
     useEffect(() => {
         const tmp = setTimeout(() => {
             if (
-                config.filters.findIndex(
-                    (val) => val.name == filterName,
-                ) != -1 ||
+                config.filters.findIndex((val) => val.name == filterName) !=
+                    -1 ||
                 filterName == "Inbox" ||
                 filterName == "Sent" ||
                 filterName == "All"

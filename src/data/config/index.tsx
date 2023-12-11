@@ -13,7 +13,7 @@ type Filter = {
 }
 
 type Config = {
-    validated: boolean,
+    validated: boolean
     filters: Filter[]
     username: string
     password: string

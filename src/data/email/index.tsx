@@ -342,10 +342,7 @@ function useMailBoxReducer(config: Config) {
         return () => {}
     }, [config])
 
-    return [mailBoxState, mailBoxDispatch] as [
-        typeof mailBoxState,
-        typeof mailBoxDispatch,
-    ]
+    return [mailBoxState, mailBoxDispatch] as const
 }
 
 export { useMailBoxReducer, MailBuilder }

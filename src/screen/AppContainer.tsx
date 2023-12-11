@@ -63,7 +63,6 @@ export default function EmailContent() {
                         filter={filters}
                         currentFilter={mailBox.currentFilter.name}
                         setFilter={(name) => {
-                            console.log("Name", name)
                             const newFilter = config.filters.find(
                                 (value) => value.name == name,
                             )

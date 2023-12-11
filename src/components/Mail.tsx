@@ -156,7 +156,11 @@ export default function EmailContent({
                                     size="sm"
                                     variant="soft"
                                     color="primary"
-                                    onClick={() => {}}
+                                    onClick={() => {
+                                        window.navigator.clipboard.writeText(
+                                            mail.sender,
+                                        )
+                                    }}
                                 >
                                     {mail.sender}
                                 </Chip>
@@ -179,9 +183,13 @@ export default function EmailContent({
                                     size="sm"
                                     variant="soft"
                                     color="primary"
-                                    onClick={() => {}}
+                                    onClick={() => {
+                                        window.navigator.clipboard.writeText(
+                                            mail.receiver.join(", "),
+                                        )
+                                    }}
                                 >
-                                    {mail.receiver}
+                                    {mail.receiver.join(", ")}
                                 </Chip>
                             </Tooltip>
                         </div>

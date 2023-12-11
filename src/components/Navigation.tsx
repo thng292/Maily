@@ -4,6 +4,7 @@ import InboxRoundedIcon from "@mui/icons-material/InboxRounded"
 import OutboxRoundedIcon from "@mui/icons-material/OutboxRounded"
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined"
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined"
+import FolderOpenIcon from "@mui/icons-material/FolderOpen"
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded"
 import AllInboxIcon from "@mui/icons-material/AllInbox"
 import {
@@ -123,14 +124,7 @@ export default function Navigation({
                                         onClick={() => setFilter(val)}
                                     >
                                         <ListItemDecorator>
-                                            <Box
-                                                sx={{
-                                                    width: "10px",
-                                                    height: "10px",
-                                                    borderRadius: "99px",
-                                                    bgcolor: "primary.500",
-                                                }}
-                                            />
+                                            <FolderOpenIcon fontSize="small" />
                                         </ListItemDecorator>
                                         <ListItemContent>{val}</ListItemContent>
                                         <div className="flex-1"></div>
@@ -141,16 +135,19 @@ export default function Navigation({
                                                     slotProps={{
                                                         root: {
                                                             variant: "plain",
+                                                            onClick: (e) =>
+                                                                e.stopPropagation(),
                                                         },
                                                     }}
                                                 >
-                                                    <MoreVert></MoreVert>
+                                                    <MoreVert fontSize="small"></MoreVert>
                                                 </MenuButton>
                                                 <Menu>
                                                     <MenuItem
-                                                        onClick={() =>
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
                                                             editFilter(val)
-                                                        }
+                                                        }}
                                                     >
                                                         <ListItemDecorator>
                                                             <ModeEditOutlineOutlinedIcon />
