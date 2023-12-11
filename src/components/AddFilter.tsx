@@ -1,4 +1,4 @@
-import { ConfigContext } from "@/data/provider"
+import { ConfigContext, MailBoxContext } from "@/data/provider"
 import { useContext, useEffect, useRef, useState } from "react"
 
 import {
@@ -27,6 +27,7 @@ export default function AddFilter({
     onClose: () => void
 }) {
     const [config, updateConfig] = useContext(ConfigContext)
+    const [mailBox, dispatchMailBox] = useContext(MailBoxContext)
     const sender = useRef<HTMLInputElement>(null)
     const subject = useRef<HTMLInputElement>(null)
     const content = useRef<HTMLInputElement>(null)
@@ -153,7 +154,6 @@ export default function AddFilter({
                             })
                             updateConfig(old)
                             setFilterName("")
-                            setFilter(filterName)
                             onClose()
                         }}
                     >

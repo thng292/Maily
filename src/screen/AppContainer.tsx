@@ -72,10 +72,6 @@ export default function EmailContent() {
                             })
                         }}
                         deleteFilter={(name) => {
-                            dispatchMailBox({
-                                action: "Get",
-                                filter: { name: "Inbox" },
-                            })
                             const old = structuredClone(config)
                             old.filters.splice(
                                 old.filters.findIndex(
@@ -83,7 +79,10 @@ export default function EmailContent() {
                                 ),
                                 1,
                             )
-                            setConfig(old)
+                            dispatchMailBox({
+                                action: "Get",
+                                filter: { name: "Inbox" },
+                            }).then(() => setConfig(old))
                         }}
                         editFilter={(name) => {
                             toggleEditFilter(
