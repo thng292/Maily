@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from "react"
+import { useContext, useEffect, useMemo, useState } from "react"
 import CreateRoundedIcon from "@mui/icons-material/CreateRounded"
 import { Navigate } from "react-router-dom"
 import { AllFilter } from "@/data/email"
@@ -32,6 +32,10 @@ export default function EmailContent() {
     const [open, setOpen] = useState(false)
     const [isReply, setIsReply] = useState(false)
     const [isForward, setIsForward] = useState(false)
+
+    useEffect(() => {
+        console.log(mailBox)
+    }, [mailBox])
 
     if (!config.validated) {
         return (
@@ -133,6 +137,7 @@ export default function EmailContent() {
                     <MailList
                         data={mailBox.mailBox}
                         selected={mailBox.currentMail}
+                        onMore={() => dispatchMailBox({ action: "More" })}
                         onSelect={(mail) => {
                             let action2 = "GetEmail"
                             if (mailBox.currentFilter.name == "Sent") {

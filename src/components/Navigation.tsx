@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import AddRoundedIcon from "@mui/icons-material/AddRounded"
 import InboxRoundedIcon from "@mui/icons-material/InboxRounded"
 import OutboxRoundedIcon from "@mui/icons-material/OutboxRounded"
@@ -15,7 +15,6 @@ import {
     ListItemButton,
     ListItemDecorator,
     ListItemContent,
-    Divider,
     Dropdown,
     Menu,
     MenuButton,

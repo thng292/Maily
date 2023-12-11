@@ -5,8 +5,6 @@ import {
     listItemButtonClasses,
     ListItem,
     ListItemButton,
-    ListItemDecorator,
-    Avatar,
     Box,
     Typography,
     ListDivider,
@@ -17,10 +15,12 @@ export default function EmailList({
     data,
     selected,
     onSelect,
+    onMore,
 }: {
     data: EmailMeta[]
     selected: Email | null
     onSelect: (mail: EmailMeta) => void
+    onMore: () => void
 }) {
     return (
         <List
@@ -93,6 +93,7 @@ export default function EmailList({
                     <ListDivider sx={{ m: 0 }} />
                 </React.Fragment>
             ))}
+            <ListItemButton onClick={onMore}>More</ListItemButton>
         </List>
     )
 }

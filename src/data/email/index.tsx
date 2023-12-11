@@ -108,7 +108,7 @@ function useMailBoxReducer(config: Config) {
                                     await addEmail(
                                         parseEmail(mail),
                                         mail.content,
-                                    )
+                                    ).catch()
                                 } else {
                                     updateListID(uid.uid, uid.id)
                                 }
@@ -231,30 +231,38 @@ function useMailBoxReducer(config: Config) {
                         let rawMails: EmailMeta[]
                         switch (mailBoxState.currentFilter.name) {
                             case "All":
-                                rawMails = await getEmails(1, {
-                                    name: "",
-                                    rule: {
-                                        mail: [],
-                                        subject: [],
-                                        content: [],
+                                rawMails = await getEmails(
+                                    mailBoxState.page + 1,
+                                    {
+                                        name: "",
+                                        rule: {
+                                            mail: [],
+                                            subject: [],
+                                            content: [],
+                                        },
                                     },
-                                })
+                                )
                                 break
                             case "Inbox":
-                                rawMails = await getInbox(1, config.filters)
+                                rawMails = await getInbox(
+                                    mailBoxState.page + 1,
+                                    config.filters,
+                                )
                                 break
                             case "Sent":
-                                rawMails = await getSentEmails(1)
+                                rawMails = await getSentEmails(
+                                    mailBoxState.page + 1,
+                                )
                                 break
                             default:
                                 rawMails = await getEmails(
-                                    1,
+                                    mailBoxState.page + 1,
                                     mailBoxState.currentFilter as Filter,
                                 )
                                 break
                         }
                         setMailBoxState({
-                            mailBox: rawMails,
+                            mailBox: [...mailBoxState.mailBox, ...rawMails],
                             currentFilter: mailBoxState.currentFilter,
                             state: "success",
                             error: null,
@@ -271,6 +279,7 @@ function useMailBoxReducer(config: Config) {
                     } catch (e) {
                         setFail(String(e))
                     }
+                    SaveDB()
                     mailBoxDispatch({ action: "Get" })
                     break
                 case "Unread":
@@ -279,6 +288,7 @@ function useMailBoxReducer(config: Config) {
                     } catch (e) {
                         setFail(String(e))
                     }
+                    SaveDB()
                     mailBoxDispatch({ action: "Get" })
                     break
                 case "GetEmail":
@@ -311,7 +321,7 @@ function useMailBoxReducer(config: Config) {
                     break
             }
         },
-        [setMailBoxState, config],
+        [mailBoxState, setMailBoxState, config],
     )
 
     useEffect(() => {
