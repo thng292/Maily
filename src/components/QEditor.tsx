@@ -5,9 +5,10 @@ import "react-quill/dist/quill.snow.css"
 interface Props {
     value: string
     setValue: (val: string) => void
+    setFocus: (val: number) => void
 }
 
-const QEditor = ({ value, setValue }: Props) => {
+const QEditor = ({ value, setValue, setFocus }: Props) => {
     var toolbarOptions = [
         ["bold", "italic", "underline", "strike"], // toggled buttons
         ["blockquote", "code-block"],
@@ -30,7 +31,6 @@ const QEditor = ({ value, setValue }: Props) => {
         toolbar: toolbarOptions,
     }
 
-    console.log(value)
     return (
         <ReactQuill
             modules={module}
@@ -38,6 +38,7 @@ const QEditor = ({ value, setValue }: Props) => {
             value={value}
             onChange={setValue}
             className="rounded-lg"
+            onFocus={() => setFocus(4)}
         />
     )
 }

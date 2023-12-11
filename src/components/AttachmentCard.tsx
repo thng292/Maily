@@ -21,8 +21,9 @@ const AttachmentCard = ({ attachment, onDelete }: Props) => {
                     >
                         <CloseIcon />
                     </IconButton>
-                    <Typography>
-                        {attachment.filename} {GetFileSize(attachment)}
+                    <Typography className="max-w-[15rem] overflow-hidden overflow-ellipsis whitespace-nowrap">
+                        [ {GetFileSize(attachment).toFixed(2)} KB]
+                        {attachment.filename}
                     </Typography>
                 </Stack>
             </CardContent>
