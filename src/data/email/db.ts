@@ -27,6 +27,7 @@ export const dbWorker = new Worker(
 )
 
 const saveDBId = 999
+const setupDBID = 128
 export function SaveDB() {
     dbWorker.postMessage({
         id: saveDBId,
@@ -34,12 +35,16 @@ export function SaveDB() {
     })
 }
 
-window.addEventListener("beforeunload", SaveDB)
-
 dbWorker.onmessage = () => {
     console.log("Database opened")
     dbWorker.onmessage = (event) => {
-        console.log(event.data)
+        console.log("DB Result: ", event.data)
+        if (event.data.id == setupDBID && !!event.data.error) {
+            console.warn("DB is malformed", event.data.error)
+            fs.writeFileSync(dbPath, Buffer.from(""), { flag: "w" })
+            setupDB()
+            return
+        }
         if (event.data.id == saveDBId) {
             console.log("Saved")
             fs.writeFile(dbPath, event.data.buffer, (e) => {
@@ -78,7 +83,7 @@ dbWorker.postMessage({
 
 export function setupDB(): Promise<void> {
     return new Promise((res, rej) => {
-        const id = getQueryID()
+        const id = setupDBID
         dbWorker.postMessage({
             id: id,
             action: "exec",
