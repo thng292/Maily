@@ -129,50 +129,7 @@ export default function Navigation({
                                         <ListItemContent>{val}</ListItemContent>
                                         <div className="flex-1"></div>
                                         <ListItemDecorator>
-                                            <Dropdown>
-                                                <MenuButton
-                                                    slots={{ root: IconButton }}
-                                                    slotProps={{
-                                                        root: {
-                                                            variant: "plain",
-                                                            onClick: (e) =>
-                                                                e.stopPropagation(),
-                                                        },
-                                                    }}
-                                                >
-                                                    <MoreVert fontSize="small"></MoreVert>
-                                                </MenuButton>
-                                                <Menu>
-                                                    <MenuItem
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            editFilter(val)
-                                                        }}
-                                                    >
-                                                        <ListItemDecorator>
-                                                            <ModeEditOutlineOutlinedIcon />
-                                                        </ListItemDecorator>{" "}
-                                                        Edit
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        variant="soft"
-                                                        color="danger"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            deleteFilter(val)
-                                                        }}
-                                                    >
-                                                        <ListItemDecorator
-                                                            sx={{
-                                                                color: "inherit",
-                                                            }}
-                                                        >
-                                                            <DeleteRoundedIcon />
-                                                        </ListItemDecorator>{" "}
-                                                        Delete
-                                                    </MenuItem>
-                                                </Menu>
-                                            </Dropdown>
+                                            <EditModal filterName={val} />
                                         </ListItemDecorator>
                                     </ListItemButton>
                                 </ListItem>
@@ -195,4 +152,52 @@ export default function Navigation({
             ></AddFilter>
         </>
     )
+
+    function EditModal({ filterName }: { filterName: string }) {
+        return (
+            <Dropdown>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    slotProps={{
+                        root: {
+                            variant: "plain",
+                            onClick: (e) => e.stopPropagation(),
+                        },
+                    }}
+                >
+                    <MoreVert fontSize="small"></MoreVert>
+                </MenuButton>
+                <Menu>
+                    <MenuItem
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            editFilter(filterName)
+                        }}
+                    >
+                        <ListItemDecorator>
+                            <ModeEditOutlineOutlinedIcon />
+                        </ListItemDecorator>{" "}
+                        Edit
+                    </MenuItem>
+                    <MenuItem
+                        variant="soft"
+                        color="danger"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            deleteFilter(filterName)
+                        }}
+                    >
+                        <ListItemDecorator
+                            sx={{
+                                color: "inherit",
+                            }}
+                        >
+                            <DeleteRoundedIcon />
+                        </ListItemDecorator>{" "}
+                        Delete
+                    </MenuItem>
+                </Menu>
+            </Dropdown>
+        )
+    }
 }
