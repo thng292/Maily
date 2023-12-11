@@ -284,7 +284,7 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                             level="body-sm"
                                             textColor="neutral.300"
                                         >
-                                            {GetFileSize(attch)}
+                                            {GetFileSize(attch).toFixed(2)} KB
                                         </Typography>
                                     </CardContent>
                                 </Card>

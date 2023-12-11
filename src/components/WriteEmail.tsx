@@ -6,7 +6,14 @@ import FormControl from "@mui/joy/FormControl"
 import FormLabel from "@mui/joy/FormLabel"
 import Textarea from "@mui/joy/Textarea"
 import Sheet from "@mui/joy/Sheet"
-import { Container, IconButton, Input, Stack, Typography } from "@mui/joy"
+import {
+    Container,
+    FormHelperText,
+    IconButton,
+    Input,
+    Stack,
+    Typography,
+} from "@mui/joy"
 
 import QEditor from "./QEditor"
 import { Attachment, Email, MailBuilder } from "@/data/email"
@@ -18,7 +25,9 @@ import mime from "mime"
 import fs from "fs"
 import path from "path"
 import AttachmentCard from "./AttachmentCard"
-import ReactDOMServer from "react-dom/server"
+import AlertModal from "./AlertModal"
+import { isQuillEmpty } from "@/utils/IsQuillEmpty"
+import { validateCc } from "@/utils/ValidateCc"
 
 interface WriteEmailProps {
     open: boolean
@@ -36,10 +45,17 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
         const [cc, setCc] = useState("")
         const [subject, setSubject] = useState("")
         const [sending, setSending] = useState(false)
+        const [attatchments, setAttatchments] = useState<Attachment[]>()
+
+        const [focus, setFocus] = useState(0)
+        const [attachAlertOpen, setAttachAlertOpen] = useState(false)
+        const [emptyAlertOpen, setEmptyAlertOpen] = useState(false)
+        const [ccAlertOpen, setCcAlertOpen] = useState(false)
+        const attachSize = React.useRef(0)
+        const formRef = React.useRef<HTMLFormElement>(null)
 
         const [config, updateConfig] = React.useContext(ConfigContext)
         const [mailbox, dispatchMailBox] = React.useContext(MailBoxContext)
-        const [attatchments, setAttatchments] = useState<Attachment[]>()
 
         React.useEffect(() => {
             if (isReply) {
@@ -54,48 +70,104 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
 
             if (sending) {
                 if (mailbox.state == "success") {
+                    setValue("")
+                    setReceiver("")
+                    setBcc("")
+                    setCc("")
+                    setSubject("")
+                    setAttatchments([])
+                    setFocus(0)
+                    attachSize.current = 0
+
                     setSending(false)
                     onClose()
                 }
             }
         }, [isReply, isForward, mailbox])
 
-        const sendMail = React.useCallback(() => {
-            const newDiv = document.createElement("div")
-            newDiv.innerHTML = value
-            let mail = new MailBuilder()
-            mail.addContent(newDiv)
-            mail.addReceiver(receiver.split(","))
-            mail.addSender(config.username)
-            mail.addBCC(bcc.split(",").map((val) => val.trim()))
-            mail.addCC(cc.split(",").map((val) => val.trim()))
-            if (attatchments) {
-                mail.addAttachment(attatchments)
-            }
-            dispatchMailBox({ action: "Send", email: mail })
-            setSending(true)
-        }, [value, receiver, config, dispatchMailBox])
+        const sendMail = React.useCallback(
+            (event: React.FormEvent<HTMLFormElement>) => {
+                event.preventDefault()
+
+                if (isQuillEmpty(value) && !attatchments) {
+                    setEmptyAlertOpen(true)
+                    return
+                }
+
+                let mail = new MailBuilder()
+                if (bcc != "") {
+                    if (!validateCc(bcc)) {
+                        setCcAlertOpen(true)
+                        return
+                    } else {
+                        mail.addBCC(bcc.split(",").map((val) => val.trim()))
+                    }
+                }
+
+                if (cc != "") {
+                    if (!validateCc(cc)) {
+                        setCcAlertOpen(true)
+                        return
+                    } else {
+                        mail.addCC(cc.split(",").map((val) => val.trim()))
+                    }
+                }
+
+                const newDiv = document.createElement("div")
+                newDiv.innerHTML = value
+                mail.addSender(config.username)
+                mail.addReceiver(receiver.split(","))
+                mail.addSubject(subject)
+                mail.addContent(newDiv)
+                if (attatchments) {
+                    mail.addAttachment(attatchments)
+                }
+
+                dispatchMailBox({ action: "Send", email: mail })
+                setSending(true)
+            },
+            [value, receiver, bcc, cc, attatchments, config, dispatchMailBox],
+        )
 
         const handleFile = React.useCallback(async () => {
             let filePaths = await window.electronAPI.openLoad()
             if (filePaths) {
-                let attList = filePaths.map((filePath) => {
+                let attList: Attachment[] = []
+
+                filePaths.forEach((filePath) => {
                     const fileName = path.basename(filePath)
-                    const fileMime = mime.getType(filePath)
-                    const fileContent = fs.readFileSync(filePath, {
-                        encoding: "base64",
-                    })
-                    let att: Attachment = {
-                        filename: fileName,
-                        mime: fileMime!,
-                        contentBase64: fileContent,
+                    let contains =
+                        attatchments?.some(
+                            (attach) => attach.filename == fileName,
+                        ) ||
+                        attList.some((attach) => attach?.filename == fileName)
+                    if (!contains) {
+                        const fileMime = mime.getType(filePath)
+                        const fileContent = fs.readFileSync(filePath, {
+                            encoding: "base64",
+                        })
+                        let att: Attachment = {
+                            filename: fileName,
+                            mime: fileMime!,
+                            contentBase64: fileContent,
+                        }
+                        attList.push(att)
                     }
-                    return att
                 })
-                if (attatchments) {
-                    setAttatchments([...attatchments, ...attList])
+
+                const attSizeSum = attList.reduce(
+                    (acc, val) => acc + GetFileSize(val!),
+                    0,
+                )
+                if (attachSize.current + attSizeSum <= 3072) {
+                    if (attatchments) {
+                        setAttatchments([...attatchments, ...attList])
+                    } else {
+                        setAttatchments(attList)
+                    }
+                    attachSize.current += attSizeSum
                 } else {
-                    setAttatchments(attList)
+                    setAttachAlertOpen(true)
                 }
             }
         }, [attatchments])
@@ -103,6 +175,7 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
         const deleteAttach = React.useCallback(
             (index: number) => {
                 setAttatchments((prev) => {
+                    attachSize.current -= GetFileSize(prev![index])
                     const updatedAttach = [...prev!]
                     updatedAttach.splice(index, 1)
                     return updatedAttach
@@ -112,7 +185,7 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
         )
 
         return (
-            <Sheet
+            <Container
                 ref={ref}
                 sx={{
                     alignItems: "center",
@@ -135,7 +208,12 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                 }}
             >
                 <Box sx={{ mb: 2 }}>
-                    <Typography level="title-sm">New message</Typography>
+                    <Typography
+                        level="title-md"
+                        className="font-bold"
+                    >
+                        New message
+                    </Typography>
                     <ModalClose
                         id="close-icon"
                         onClick={onClose}
@@ -149,81 +227,126 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
                         flexShrink: 0,
                     }}
                 >
-                    <FormControl>
-                        <FormLabel>To</FormLabel>
-                        <Input
-                            placeholder="email@email.com"
-                            aria-label="Message"
-                            type="email"
-                            value={receiver}
-                            onChange={(e) => setReceiver(e.target.value)}
-                        />
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>CC</FormLabel>
-                        <Input
-                            placeholder="email@email.com"
-                            aria-label="Message"
-                            value={cc}
-                            onChange={(e) => setCc(e.target.value)}
-                        />
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>BCC</FormLabel>
-                        <Input
-                            placeholder="email@email.com"
-                            aria-label="Message"
-                            value={bcc}
-                            onChange={(e) => setBcc(e.target.value)}
-                        />
-                    </FormControl>
-                    <Input
-                        placeholder="Subject"
-                        aria-label="Message"
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                    />
-                    <FormControl>
-                        <QEditor
-                            value={value}
-                            setValue={setValue}
-                        ></QEditor>
-                    </FormControl>
-                    <Stack
-                        direction="row"
-                        alignItems="center"
-                        justifyContent="space-between"
+                    <form
+                        onSubmit={sendMail}
+                        ref={formRef}
                     >
-                        <IconButton onClick={handleFile}>
-                            <AttachmentOutlined></AttachmentOutlined>
-                        </IconButton>
-                        {attatchments && (
+                        <FormControl>
+                            <FormLabel>To</FormLabel>
+                            <Input
+                                placeholder="email@email.com"
+                                aria-label="Message"
+                                type="email"
+                                value={receiver}
+                                onChange={(e) => setReceiver(e.target.value)}
+                                onFocus={() => setFocus(0)}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>CC</FormLabel>
+                            <Input
+                                placeholder="email@email.com, email@email.com,..."
+                                aria-label="Message"
+                                value={cc}
+                                onChange={(e) => setCc(e.target.value)}
+                                onFocus={() => setFocus(1)}
+                            />
+                            {focus == 1 && (
+                                <FormHelperText>Comma separated</FormHelperText>
+                            )}
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>BCC</FormLabel>
+                            <Input
+                                placeholder="email@email.com, email@email.com,..."
+                                aria-label="Message"
+                                value={bcc}
+                                onChange={(e) => setBcc(e.target.value)}
+                                onFocus={() => setFocus(2)}
+                            />
+                            {focus == 2 && (
+                                <FormHelperText>Comma separated</FormHelperText>
+                            )}
+                        </FormControl>
+                        <FormControl className="pb-2">
+                            <FormLabel>Subject</FormLabel>
+                            <Input
+                                placeholder="Subject"
+                                aria-label="Message"
+                                value={subject}
+                                onChange={(e) => setSubject(e.target.value)}
+                                onFocus={() => setFocus(3)}
+                            />
+                        </FormControl>
+                        <FormControl className="pb-2">
+                            <QEditor
+                                value={value}
+                                setValue={setValue}
+                                setFocus={setFocus}
+                            ></QEditor>
+                        </FormControl>
+                        <FormControl>
                             <Stack
                                 direction="row"
-                                className="h-full overflow-x-scroll grow"
-                                justifyContent="flex-start"
                                 alignItems="center"
+                                spacing={1}
                             >
-                                {attatchments.map((attach, index) => (
-                                    <AttachmentCard
-                                        key={attach.filename}
-                                        attachment={attach}
-                                        onDelete={() => deleteAttach(index)}
-                                    ></AttachmentCard>
-                                ))}
+                                <IconButton
+                                    onClick={handleFile}
+                                    onFocus={() => setFocus(5)}
+                                >
+                                    <AttachmentOutlined />
+                                </IconButton>
+                                <Stack
+                                    direction="row"
+                                    className="max-h-full overflow-x-auto grow"
+                                    alignItems="center"
+                                    spacing={1}
+                                >
+                                    {attatchments &&
+                                        attatchments.map((attach, index) => (
+                                            <AttachmentCard
+                                                key={attach.filename}
+                                                attachment={attach}
+                                                onDelete={() =>
+                                                    deleteAttach(index)
+                                                }
+                                            ></AttachmentCard>
+                                        ))}
+                                </Stack>
+
+                                <Button
+                                    color="primary"
+                                    sx={{ borderRadius: "sm" }}
+                                    loading={sending}
+                                    type="submit"
+                                >
+                                    Send
+                                </Button>
                             </Stack>
-                        )}
-                        <Button
-                            color="primary"
-                            sx={{ borderRadius: "sm" }}
-                            onClick={sendMail}
-                            loading={sending}
-                        >
-                            Send
-                        </Button>
-                    </Stack>
+                        </FormControl>
+                    </form>
                 </Box>
-            </Sheet>
+                <AlertModal
+                    open={attachAlertOpen}
+                    setOpen={setAttachAlertOpen}
+                    title="Attachment size limit exceeded"
+                    content="Total attachment size must be less than 3 MB"
+                ></AlertModal>
+                <AlertModal
+                    open={emptyAlertOpen}
+                    setOpen={setEmptyAlertOpen}
+                    title="Empty mail"
+                    content="Your mail must contain either content or attachments"
+                ></AlertModal>
+                <AlertModal
+                    open={ccAlertOpen}
+                    setOpen={setCcAlertOpen}
+                    title="Invalid CC/BCC"
+                    content="Make sure CC/BCC is in the correct format"
+                ></AlertModal>
+            </Container>
         )
     },
 )
