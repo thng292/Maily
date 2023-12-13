@@ -47,7 +47,7 @@ export default defineConfig(({ command }) => {
                                         "dependencies" in pkg
                                             ? pkg.dependencies
                                             : {},
-                                    )
+                                    ),
                                 ],
                             },
                         },
@@ -71,7 +71,7 @@ export default defineConfig(({ command }) => {
                                         "dependencies" in pkg
                                             ? pkg.dependencies
                                             : {},
-                                    )
+                                    ),
                                 ],
                             },
                         },

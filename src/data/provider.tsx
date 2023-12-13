@@ -13,7 +13,7 @@ export const MailBoxContext = createContext<
         mailBox: [],
         currentFilter: { name: "Inbox" },
         currentMail: null,
-        state: "loading",
+        state: "success",
         error: "",
         page: 1,
     },

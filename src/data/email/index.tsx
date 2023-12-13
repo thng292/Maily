@@ -95,8 +95,8 @@ function useMailBoxReducer(config: Config) {
                             await POP3.USER(config.username)
                             await POP3.PASS(config.password)
                             const uids = await POP3.UIDL()
+                            console.log("UIDS: ", uids)
                             await deleteNotIn(uids.map((val) => val.uid))
-                            console.log(uids)
                             for (let uid of uids) {
                                 if (!(await findUIDL(uid.uid))) {
                                     const mail = {
@@ -108,13 +108,15 @@ function useMailBoxReducer(config: Config) {
                                     await addEmail(
                                         parseEmail(mail),
                                         mail.content,
-                                    ).catch()
+                                    ).catch((e) => {
+                                        console.error(uid, e)
+                                    })
                                 } else {
                                     updateListID(uid.uid, uid.id)
                                 }
                             }
                             SaveDB()
-                            mailBoxDispatch({
+                            await mailBoxDispatch({
                                 action: "Get",
                             })
                         } catch (e) {
@@ -280,7 +282,7 @@ function useMailBoxReducer(config: Config) {
                         setFail(String(e))
                     }
                     SaveDB()
-                    mailBoxDispatch({ action: "Get" })
+                    await mailBoxDispatch({ action: "Get" })
                     break
                 case "Unread":
                     try {
@@ -289,7 +291,7 @@ function useMailBoxReducer(config: Config) {
                         setFail(String(e))
                     }
                     SaveDB()
-                    mailBoxDispatch({ action: "Get" })
+                    await mailBoxDispatch({ action: "Get" })
                     break
                 case "GetEmail":
                     try {

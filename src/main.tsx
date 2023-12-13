@@ -3,14 +3,18 @@ import ReactDOM from "react-dom/client"
 import { DataProvider } from "@/data/provider"
 import "./index.css"
 import "@fontsource/inter"
-import { createBrowserRouter, RouterProvider } from "react-router-dom"
+import {
+    createBrowserRouter,
+    createHashRouter,
+    RouterProvider,
+} from "react-router-dom"
 import { CssVarsProvider, StyledEngineProvider } from "@mui/joy/styles"
 import FirstTime from "./screen/FirstTime"
 import AppContainer from "./screen/AppContainer"
 import { CssBaseline } from "@mui/joy"
 import { FloodServer } from "./screen/FloodServer"
 
-const router = createBrowserRouter([
+const router = createHashRouter([
     {
         path: "/",
         index: true,

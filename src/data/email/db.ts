@@ -7,7 +7,7 @@ import { MailBuilder } from "./MailBuilder"
 const dbPath = "email.sqlite"
 const pageSize = 50
 fs.writeFileSync(dbPath, "", { flag: "a+" })
-const filebuffer = fs.readFileSync(dbPath)
+let filebuffer = fs.readFileSync(dbPath)
 
 type SuccessCB_T = (mails?: (number | string)[][]) => void
 type ErrorCB_T = (e: string) => void
@@ -23,7 +23,7 @@ const getQueryID = (() => {
 })()
 
 export const dbWorker = new Worker(
-    new URL("./worker.sql-wasm.js", import.meta.url),
+    new URL("./worker.sql-asm.js", import.meta.url),
 )
 
 const saveDBId = 999
@@ -41,8 +41,17 @@ dbWorker.onmessage = () => {
         console.log("DB Result: ", event.data)
         if (event.data.id == setupDBID && !!event.data.error) {
             console.warn("DB is malformed", event.data.error)
-            fs.writeFileSync(dbPath, Buffer.from(""), { flag: "w" })
-            setupDB()
+            dbWorker.postMessage({
+                id: getQueryID(),
+                action: "close",
+                buffer: filebuffer,
+            })
+            dbWorker.postMessage({
+                id: getQueryID(),
+                action: "open",
+                buffer: "",
+            })
+            // setupDB()
             return
         }
         if (event.data.id == saveDBId) {
@@ -377,7 +386,7 @@ export function findUIDL(uidl: string): Promise<boolean> {
         })
         successCb[id] = (rawEmail) => {
             console.log(id, findUIDL.name, rawEmail)
-            onSuccess(rawEmail?.length != 0)
+            onSuccess(rawEmail != undefined && rawEmail?.length != 0)
         }
         // errorCb[id] = onError
         errorCb[id] = (e) => {

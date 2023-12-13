@@ -1,9 +1,8 @@
 {
-  "name": "electron-vite-react",
-  "version": "2.2.0",
+  "name": "Maily",
+  "version": "1.0.0",
   "main": "dist-electron/main/index.js",
-  "description": "Electron Vite React boilerplate.",
-  "author": "草鞋没号 <308487730@qq.com>",
+  "description": "An Email client",
   "license": "MIT",
   "private": true,
   "debug": {
@@ -28,6 +27,7 @@
     "@mui/icons-material": "^5.14.18",
     "@mui/joy": "^5.0.0-beta.16",
     "file-type": "^18.7.0",
+    "js-beautify": "^1.14.11",
     "lexical": "^0.12.2",
     "mime": "^4.0.0",
     "react-quill": "^2.0.0",
@@ -44,7 +44,6 @@
     "autoprefixer": "^10.4.16",
     "electron": "^26.0.0",
     "electron-builder": "^24.6.4",
-    "js-beautify": "^1.14.11",
     "postcss": "^8.4.31",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

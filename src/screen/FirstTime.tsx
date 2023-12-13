@@ -62,7 +62,7 @@ function FirstTime() {
             })
             if (oldErrorState.err.length) {
                 setInputState("bad")
-                setErrorState(() => oldErrorState)
+                setErrorState(oldErrorState)
                 return
             }
             if (email.current) {
@@ -73,18 +73,18 @@ function FirstTime() {
             }
             if (oldErrorState.err.length) {
                 setInputState("bad")
-                setErrorState(() => oldErrorState)
+                setErrorState(oldErrorState)
                 return
             }
             if (password.current) {
-                await pop3.USER(password.current.value).catch((e) => {
+                await pop3.PASS(password.current.value).catch((e) => {
                     oldErrorState.password = true
                     oldErrorState.err = e
                 })
             }
             if (oldErrorState.err.length) {
                 setInputState("bad")
-                setErrorState(() => oldErrorState)
+                setErrorState(oldErrorState)
                 return
             }
         }
@@ -95,23 +95,18 @@ function FirstTime() {
                 oldErrorState.smtpPort = true
                 oldErrorState.err = "Check your SMPT port number"
                 setInputState("bad")
-                setErrorState(() => oldErrorState)
-
+                setErrorState(oldErrorState)
                 return
             }
             await SMTP.test(server.current.value, smtpP).catch((e) => {
                 oldErrorState.server = oldErrorState.smtpPort = true
                 oldErrorState.err = e
+                setInputState("bad")
             })
         }
-        setErrorState(() => oldErrorState)
+        setErrorState(oldErrorState)
         if (!errorState.err.length) {
             setInputState("good")
-        }
-    }
-
-    useEffect(() => {
-        if (inputState == "good") {
             updateConfig({
                 ...config,
                 validated: true,
@@ -126,7 +121,7 @@ function FirstTime() {
                 relative: "route",
             })
         }
-    }, [inputState])
+    }
 
     if (config.validated) {
         return (
@@ -301,7 +296,7 @@ function FirstTime() {
                                             variant="soft"
                                         />
                                     ) : (
-                                        "Check"
+                                        "Go"
                                     )}
                                 </Button>
                             </Stack>

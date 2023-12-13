@@ -20,7 +20,6 @@ class POP3Wrapper {
 
     connect(server: string, port: number): Promise<void> {
         return new Promise((onRes, onErr) => {
-            this.socket.connect(port, server, () => {})
             this.socket.once("data", (data) => {
                 if (data.toString().startsWith("+OK")) {
                     onRes()
@@ -37,12 +36,12 @@ class POP3Wrapper {
             this.socket.once("error", (data) => {
                 onErr(data.message)
             })
+            this.socket.connect(port, server, () => {})
         })
     }
 
     USER(username: string): Promise<void> {
         return new Promise((onRes, onErr) => {
-            this.socket.write(`USER ${username}\r\n`)
             this.socket.once("data", (data) => {
                 if (data.toString().startsWith("+OK")) {
                     onRes()
@@ -59,6 +58,7 @@ class POP3Wrapper {
             this.socket.once("error", (data) => {
                 onErr(data.message)
             })
+            this.socket.write(`USER ${username}\r\n`)
         })
     }
 
@@ -236,7 +236,7 @@ class SMTPWrapper {
         return new Promise<void>((res, rej) => {
             let socket = new Socket()
             socket.setMaxListeners(20)
-            socket.connect(port, server, () => {})
+            socket.connect(port, server)
             socket.once("error", (e) => rej(e.message))
             socket.once("connect", () => {
                 res()
