@@ -14,13 +14,11 @@ const AttachmentCard = ({ attachment, onDelete }: Props) => {
         <Card variant="outlined">
             <CardContent>
                 <Stack direction="row">
-                    <IconButton
+                    <CloseIcon
                         aria-label="delete"
                         onClick={onDelete}
-                        style={{ position: "absolute", top: 0, right: 0 }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
+                        className="absolute right-2 top-1/4 hover:cursor-pointer"
+                    ></CloseIcon>
                     <Typography className="max-w-[15rem] overflow-hidden overflow-ellipsis whitespace-nowrap">
                         [ {GetFileSize(attachment).toFixed(2)} KB]
                         {attachment.filename}
