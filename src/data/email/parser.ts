@@ -129,9 +129,12 @@ function parseMultipartBody(
         let started = false
         for (let line of raw) {
             if (line == startBound) {
+                if (buffer.length) {
+                    started && parts.push(buffer)
+                    buffer = []
+                }
                 started = true
-            }
-            if ((started && line == startBound) || line == endBound) {
+            } else if (line == endBound) {
                 if (buffer.length) {
                     parts.push(buffer)
                     buffer = []

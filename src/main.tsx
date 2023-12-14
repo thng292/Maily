@@ -12,7 +12,6 @@ import { CssVarsProvider, StyledEngineProvider } from "@mui/joy/styles"
 import FirstTime from "./screen/FirstTime"
 import AppContainer from "./screen/AppContainer"
 import { CssBaseline } from "@mui/joy"
-import { FloodServer } from "./screen/FloodServer"
 
 const router = createHashRouter([
     {
@@ -23,10 +22,6 @@ const router = createHashRouter([
     {
         path: "firsttime",
         element: <FirstTime />,
-    },
-    {
-        path: "flood",
-        element: <FloodServer />,
     },
 ])
 

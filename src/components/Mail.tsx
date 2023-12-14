@@ -198,8 +198,8 @@ export default function EmailContent({
                 <Divider />
                 <div
                     ref={(ref) => ref?.replaceChildren(mail.content)}
-                    className="h-fit"
-                ></div>
+                    className="py-2"
+                />
                 <Divider />
                 <RenderAttachment attachments={mail.attachment} />
             </Sheet>
@@ -260,7 +260,9 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                     variant="outlined"
                                     sx={{
                                         minWidth: 120,
-                                        aspectRatio: 1,
+                                        minHeight: 120,
+                                        maxWidth: 300,
+                                        // aspectRatio: 1,
                                         cursor: "pointer",
                                     }}
                                 >
@@ -317,7 +319,10 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                     <CardOverflow>
                                         <AspectRatio
                                             ratio="1"
-                                            sx={{ minWidth: 120 }}
+                                            sx={{
+                                                minWidth: 120,
+                                                maxWidth: 300,
+                                            }}
                                         >
                                             <AttachmentIcon />
                                         </AspectRatio>
@@ -338,13 +343,7 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
                                             level="body-sm"
                                             textColor="neutral"
                                         >
-                                            {(
-                                                ((attch.contentBase64.length /
-                                                    4) *
-                                                    3) /
-                                                1024
-                                            ).toFixed(2)}{" "}
-                                            KB
+                                            {GetFileSize(attch).toFixed(2)} KB
                                         </Typography>
                                     </Box>
                                 </Card>
@@ -360,16 +359,18 @@ function RenderAttachment({ attachments }: { attachments: Attachment[] }) {
 }
 
 function writeFile(fileName: string, base64: string) {
-    var binaryString = atob(base64)
-    var bytes = new Uint8Array(binaryString.length)
-    for (var i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i)
-    }
     window.electronAPI
         .openSave(fileName)
         .then((path) => {
             if (path) {
-                fs.writeFile(path, bytes, () => {})
+                fs.writeFile(
+                    path,
+                    base64,
+                    {
+                        encoding: "base64",
+                    },
+                    () => {},
+                )
             }
         })
         .catch(console.error)

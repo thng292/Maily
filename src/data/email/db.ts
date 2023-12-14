@@ -516,7 +516,7 @@ export function getEmail(emailID: number): Promise<Email> {
         dbWorker.postMessage({
             id: id,
             action: "exec",
-            sql: `SELECT listid, uidl, content, read FROM Inbox WHERE id = $id`,
+            sql: `SELECT id, uidl, content, read FROM Inbox WHERE id = $id`,
             params: {
                 $id: emailID,
             },

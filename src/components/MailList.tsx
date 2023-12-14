@@ -34,8 +34,8 @@ export default function EmailList({
             }}
         >
             {data?.map((item, index) => (
-                <React.Fragment key={index}>
-                    <ListItem>
+                <>
+                    <ListItem key={item.id}>
                         <ListItemButton
                             // sx={{ p: 2 }}
                             selected={item.id == selected?.id}
@@ -91,7 +91,7 @@ export default function EmailList({
                         </ListItemButton>
                     </ListItem>
                     <ListDivider sx={{ m: 0 }} />
-                </React.Fragment>
+                </>
             ))}
             <ListItemButton onClick={onMore}>More</ListItemButton>
         </List>

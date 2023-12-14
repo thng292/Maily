@@ -20,12 +20,12 @@ export type Email = {
 }
 
 export type EmailMeta = {
-    id: number,
-    sentTime: Date,
-    sender: string,
-    subject: string,
-    preview: string,
-    read: boolean,
+    id: number
+    sentTime: Date
+    sender: string
+    subject: string
+    preview: string
+    read: boolean
 }
 
 export type RawEmail = {
@@ -33,4 +33,10 @@ export type RawEmail = {
     uidl: string
     content: string
     read: boolean
+}
+
+declare global {
+    interface Window {
+        floodServer: () => Promise<void>
+    }
 }
