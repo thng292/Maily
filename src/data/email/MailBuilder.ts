@@ -132,7 +132,7 @@ export class MailBuilder {
         const fillContentIn = (addMimeMessage: boolean) => {
             let tmp = ""
             if (this.#content) {
-                tmp += `Content-Type: multipart/alternative;\r\n boundary="${mimeBoudary[1]}"\r\n`
+                tmp += `Content-Type: multipart/alternative;\r\n boundary="${mimeBoudary[1]}"\r\n\r\n`
                 if (addMimeMessage) {
                     tmp +=
                         "\r\nThis is a multi-part message in MIME format.\r\n"

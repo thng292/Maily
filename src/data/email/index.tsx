@@ -116,7 +116,7 @@ function useMailBoxReducer(config: Config) {
                                 }
                             }
                             SaveDB()
-                            await mailBoxDispatch({
+                            mailBoxDispatch({
                                 action: "Get",
                             })
                         } catch (e) {
@@ -282,7 +282,7 @@ function useMailBoxReducer(config: Config) {
                         setFail(String(e))
                     }
                     SaveDB()
-                    await mailBoxDispatch({ action: "Get" })
+                    mailBoxDispatch({ action: "Get" })
                     break
                 case "Unread":
                     try {
@@ -291,7 +291,7 @@ function useMailBoxReducer(config: Config) {
                         setFail(String(e))
                     }
                     SaveDB()
-                    await mailBoxDispatch({ action: "Get" })
+                    mailBoxDispatch({ action: "Get" })
                     break
                 case "GetEmail":
                     try {
