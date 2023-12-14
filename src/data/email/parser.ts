@@ -126,8 +126,12 @@ function parseMultipartBody(
         const endBound = startBound + "--"
         let parts: string[][] = []
         let buffer: string[] = []
+        let started = false
         for (let line of raw) {
-            if (line == startBound || line == endBound) {
+            if (line == startBound) {
+                started = true
+            }
+            if ((started && line == startBound) || line == endBound) {
                 if (buffer.length) {
                     parts.push(buffer)
                     buffer = []
@@ -136,7 +140,7 @@ function parseMultipartBody(
                 buffer.push(line)
             }
         }
-        // parts = parts.filter((val) => val.length)
+        parts = parts.filter((val) => val.length)
         console.log(parseMultipartBody.name, "Parts", parts)
         return parts
     }
