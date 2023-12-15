@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from "react"
 import CreateRoundedIcon from "@mui/icons-material/CreateRounded"
 import { Navigate } from "react-router-dom"
-import { AllFilter } from "@/data/email"
+import { AllFilter, Email } from "@/data/email"
 import { ConfigContext, MailBoxContext } from "@/data/provider"
 import Navigation from "@/components/Navigation"
 import MailList from "@/components/MailList"
@@ -32,9 +32,12 @@ export default function EmailContent() {
     const [open, setOpen] = useState(false)
     const [isReply, setIsReply] = useState(false)
     const [isForward, setIsForward] = useState(false)
+    const [currentEditMail, setCurrentEditMail] = useState<Email | null>()
 
     useEffect(() => {
         console.log(mailBox)
+        setIsReply(false)
+        setIsForward(false)
     }, [mailBox])
 
     if (!config.validated) {
@@ -164,7 +167,7 @@ export default function EmailContent() {
                         open={open}
                         isReply={isReply}
                         isForward={isForward}
-                        mail={mailBox.currentMail}
+                        mail={currentEditMail!}
                         onClose={() => {
                             setOpen(false)
                             setIsReply(false)
@@ -185,6 +188,7 @@ export default function EmailContent() {
                                 setIsReply(true)
                                 setOpen(true)
                                 setIsForward(false)
+                                setCurrentEditMail(mailBox.currentMail)
                             }}
                             deleteMail={() => {
                                 if (!mailBox.currentMail) {
@@ -206,6 +210,7 @@ export default function EmailContent() {
                                 setIsForward(true)
                                 setOpen(true)
                                 setIsReply(false)
+                                setCurrentEditMail(mailBox.currentMail)
                             }}
                         />
                     </div>

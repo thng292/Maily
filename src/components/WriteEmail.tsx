@@ -60,12 +60,17 @@ const WriteEmail = React.forwardRef<HTMLDivElement, WriteEmailProps>(
         React.useEffect(() => {
             if (isReply) {
                 setReceiver(mail!.sender)
+                setSubject("")
                 setValue("")
+                setAttatchments([])
             }
             if (isForward) {
+                setSubject(mail!.subject)
                 setValue(mail!.content.outerHTML)
                 setAttatchments(mail!.attachment)
                 setReceiver("")
+                setBcc("")
+                setCc("")
             }
 
             if (sending) {
