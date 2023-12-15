@@ -129,11 +129,15 @@ class POP3Wrapper {
                 const tmp = data.toString()
                 dataRes += tmp
                 if (tmp.endsWith("\r\n.\r\n")) {
+                    this.socket.removeAllListeners("data")
                     if (dataRes.startsWith("+OK")) {
                         sub = dataRes
                             .replace("+OK\r\n", "")
-                            .replace("\r\n.\r\n", "")
+                            .replace(".\r\n", "")
                             .split("\r\n")
+                            .filter((val) => val.length)
+                        console.warn(sub)
+                        console.warn(dataRes)
                         for (let item of sub) {
                             const sep = item.indexOf(" ")
                             const id = parseInt(item.slice(0, sep))
@@ -152,7 +156,6 @@ class POP3Wrapper {
                                 .replace("\r\n", ""),
                         )
                     }
-                    this.socket.removeAllListeners("on")
                 }
             })
             this.socket.once("error", (data) => {
@@ -169,6 +172,7 @@ class POP3Wrapper {
                 const tmp = data.toString()
                 dataRes += tmp
                 if (tmp.endsWith("\r\n.\r\n")) {
+                    this.socket.removeAllListeners("data")
                     if (dataRes.startsWith("+OK")) {
                         onRes(
                             dataRes
@@ -180,7 +184,6 @@ class POP3Wrapper {
                             dataRes.replace("-ERR ", "").replace("\r\n", "\n"),
                         )
                     }
-                    this.socket.removeAllListeners("on")
                 }
             })
             this.socket.once("error", (data) => {
@@ -214,7 +217,7 @@ class POP3Wrapper {
     QUIT(): Promise<void> {
         return new Promise((onRes, onErr) => {
             this.socket.write("QUIT\r\n")
-            this.socket.on("data", (data) => {
+            this.socket.once("data", (data) => {
                 const tmp = data.toString()
                 if (tmp.startsWith("-ERR")) {
                     console.error(`QUIT reply ` + data.toString())

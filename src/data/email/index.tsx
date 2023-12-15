@@ -19,6 +19,7 @@ import {
     updateListID,
     getListID,
     deleteNotIn,
+    clearDB,
 } from "./db"
 import { POP3Wrapper, SMTPWrapper, UIDLResult } from "@/socket"
 import { parseEmail } from "./parser"
@@ -48,6 +49,7 @@ type ActionType =
     | { action: "More" }
     | { action: "Read"; id: number }
     | { action: "Unread"; id: number }
+    | { action: "ClearDB" }
 // & { onSuccess?: () => void; onError?: (err: string) => void }
 
 function useMailBoxReducer(config: Config) {
@@ -95,9 +97,12 @@ function useMailBoxReducer(config: Config) {
                             await POP3.USER(config.username)
                             await POP3.PASS(config.password)
                             const uids = await POP3.UIDL()
-                            console.log("UIDS: ", uids)
+                            console.log("UIDS:", uids)
                             await deleteNotIn(uids.map((val) => val.uid))
+                            console.log("UIDS:", uids)
                             for (let uid of uids) {
+                                console.log("UIDS:", uids)
+                                console.log("UID: ", uid)
                                 if (!(await findUIDL(uid.uid))) {
                                     const mail = {
                                         id: uid.id,
@@ -122,6 +127,7 @@ function useMailBoxReducer(config: Config) {
                         } catch (e) {
                             setFail(String(e))
                         }
+                        POP3.QUIT()
                         POP3.destroy()
                     }
                     break
@@ -319,6 +325,15 @@ function useMailBoxReducer(config: Config) {
                         setFail(String(e))
                     }
                     break
+                case "ClearDB":
+                    try {
+                        await clearDB()
+                        mailBoxDispatch({
+                            action: "Refresh",
+                        })
+                    } catch (e) {
+                        setFail(String(e))
+                    }
                 default:
                     break
             }

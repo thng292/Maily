@@ -3,7 +3,7 @@ export const validateEmail = (email: string) => {
     // You can use a regular expression or any other validation method
 
     // Example regular expression for email validation
-    console.log(email)
+    // console.log(email)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email)
 }

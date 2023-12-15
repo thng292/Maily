@@ -2,7 +2,7 @@ import DoneIcon from "@mui/icons-material/Done"
 import { useContext, useEffect, useRef, useState } from "react"
 import { POP3Wrapper, SMTPWrapper } from "../socket"
 import { Navigate, useNavigate } from "react-router-dom"
-import { ConfigContext } from "@/data/provider"
+import { ConfigContext, MailBoxContext } from "@/data/provider"
 import VisibilityIcon from "@mui/icons-material/Visibility"
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
 import { useTheme } from "@mui/joy/styles"
@@ -30,6 +30,7 @@ const defaultErr = {
 function FirstTime() {
     const navigate = useNavigate()
     const [config, updateConfig] = useContext(ConfigContext)
+    const [_, dispatchMailBox] = useContext(MailBoxContext)
     const theme = useTheme()
     const [inputState, setInputState] = useState<
         "good" | "normal" | "bad" | "loading"
@@ -106,6 +107,7 @@ function FirstTime() {
         }
         setErrorState(oldErrorState)
         if (!errorState.err.length) {
+            dispatchMailBox({ action: "ClearDB" })
             setInputState("good")
             updateConfig({
                 ...config,

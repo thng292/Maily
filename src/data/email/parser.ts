@@ -119,7 +119,7 @@ function parseMultipartBody(
     // @ts-ignore
     const res: ReturnType<typeof parseMultipartBody> = { attachments: [] }
 
-    console.log(parseMultipartBody.name, arguments)
+    // console.log(parseMultipartBody.name, arguments)
 
     function GetParts() {
         const startBound = "--" + boundary
@@ -144,7 +144,7 @@ function parseMultipartBody(
             }
         }
         parts = parts.filter((val) => val.length)
-        console.log(parseMultipartBody.name, "Parts", parts)
+        // console.log(parseMultipartBody.name, "Parts", parts)
         return parts
     }
 
@@ -210,10 +210,10 @@ function parseMultipartBody(
 }
 
 function parseHTML(rawBody: string[]): HTMLElement {
-    console.log(
-        parseHTML.name,
-        rawBody.reduce((prev, current) => prev + current),
-    )
+    // console.log(
+    //     parseHTML.name,
+    //     rawBody.reduce((prev, current) => prev + current),
+    // )
     const tmp = document.createElement("div")
     tmp.innerHTML = rawBody.reduce((prev, current) => prev + current)
     return tmp

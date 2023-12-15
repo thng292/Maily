@@ -252,14 +252,14 @@ export function getEmails(page: number, filter: Filter): Promise<EmailMeta[]> {
                 .join(" OR "),
         )
         const whereQuery = where.filter((val) => val.length).join(" OR ")
-        console.log(
-            "Query",
-            `SELECT id, timestamp, sender, subject, preview, read 
-            FROM Inbox 
-            ${whereQuery.trim().length ? `WHERE ${whereQuery}` : ""}
-            ORDER BY DATETIME(Inbox.timestamp) DESC 
-            LIMIT $limit OFFSET $offset`,
-        )
+        // console.log(
+        //     "Query",
+        //     `SELECT id, timestamp, sender, subject, preview, read
+        //     FROM Inbox
+        //     ${whereQuery.trim().length ? `WHERE ${whereQuery}` : ""}
+        //     ORDER BY DATETIME(Inbox.timestamp) DESC
+        //     LIMIT $limit OFFSET $offset`,
+        // )
         dbWorker.postMessage({
             id: id,
             action: "exec",
@@ -673,6 +673,26 @@ export function getInbox(
         // errorCb[id] = onError
         errorCb[id] = (e) => {
             console.log(id, getInbox.name, e)
+            onError(e)
+        }
+    })
+}
+
+export function clearDB() {
+    return new Promise<void>((onSuccess, onError) => {
+        const id = getQueryID()
+        dbWorker.postMessage({
+            id: id,
+            action: "exec",
+            sql: `DELETE FROM Inbox WHERE 1; DELETE FROM Sent WHERE 1;`,
+        })
+        successCb[id] = () => {
+            console.log(id, clearDB.name)
+            onSuccess()
+        }
+        // errorCb[id] = onError
+        errorCb[id] = (e) => {
+            console.log(id, clearDB.name, e)
             onError(e)
         }
     })
