@@ -328,6 +328,10 @@ function useMailBoxReducer(config: Config) {
                 case "ClearDB":
                     try {
                         await clearDB()
+                        setMailBoxState((old) => ({
+                            ...old,
+                            currentMail: null,
+                        }))
                         mailBoxDispatch({
                             action: "Get",
                         })
