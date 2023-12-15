@@ -107,7 +107,7 @@ function FirstTime() {
         }
         setErrorState(oldErrorState)
         if (!errorState.err.length) {
-            dispatchMailBox({ action: "ClearDB" })
+            await dispatchMailBox({ action: "ClearDB" })
             setInputState("good")
             updateConfig({
                 ...config,
